@@ -31,5 +31,5 @@ public class HitDto {
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @PastOrPresent(message = "timestamp не должен быть в будущем")
-    private LocalDateTime hit_timestamp;
+    private LocalDateTime hitTimestamp;
 }
