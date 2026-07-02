@@ -1,0 +1,341 @@
+{
+"info": {
+"name": "ExploreWithMe — Stats Service",
+"_postman_id": "ewm-stats-collection",
+"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+},
+"item": [
+{
+"name": "1. Health Check",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Сервис запущен', function() {",
+" pm.response.to.have.status(200);",
+" const json = pm.response.json();",
+" pm.expect(json.status).to.eql('UP');",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "GET",
+"url": "http://localhost:9090/actuator/health",
+"description": "Проверяем что сервис запущен и работает"
+}
+},
+{
+"name": "2. POST /hit — сохранить хит для /events/1 (ip1)",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Хит сохранён — статус 201', function() {",
+" pm.response.to.have.status(201);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "POST",
+"header": [{ "key": "Content-Type", "value": "application/json" }],
+"url": "http://localhost:9090/hit",
+"body": {
+"mode": "raw",
+"raw": "{\n \"app\": \"ewm-main-service\",\n \"uri\": \"/events/1\",\n \"ip\": \"192.168.0.1\",\n \"timestamp\": \"2026-01-01 10:00:00\"\n}"
+},
+"description": "Первый уникальный ip для /events/1"
+}
+},
+{
+"name": "3. POST /hit — сохранить хит для /events/1 (ip2)",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Хит сохранён — статус 201', function() {",
+" pm.response.to.have.status(201);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "POST",
+"header": [{ "key": "Content-Type", "value": "application/json" }],
+"url": "http://localhost:9090/hit",
+"body": {
+"mode": "raw",
+"raw": "{\n \"app\": \"ewm-main-service\",\n \"uri\": \"/events/1\",\n \"ip\": \"192.168.0.2\",\n \"timestamp\": \"2026-01-01 11:00:00\"\n}"
+},
+"description": "Второй уникальный ip для /events/1"
+}
+},
+{
+"name": "4. POST /hit — сохранить хит для /events/1 (ip1 повторно)",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Хит сохранён — статус 201', function() {",
+" pm.response.to.have.status(201);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "POST",
+"header": [{ "key": "Content-Type", "value": "application/json" }],
+"url": "http://localhost:9090/hit",
+"body": {
+"mode": "raw",
+"raw": "{\n \"app\": \"ewm-main-service\",\n \"uri\": \"/events/1\",\n \"ip\": \"192.168.0.1\",\n \"timestamp\": \"2026-01-01 12:00:00\"\n}"
+},
+"description": "Тот же ip что в запросе 2 — для проверки unique"
+}
+},
+{
+"name": "5. POST /hit — сохранить хит для /events/2",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Хит сохранён — статус 201', function() {",
+" pm.response.to.have.status(201);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "POST",
+"header": [{ "key": "Content-Type", "value": "application/json" }],
+"url": "http://localhost:9090/hit",
+"body": {
+"mode": "raw",
+"raw": "{\n \"app\": \"ewm-main-service\",\n \"uri\": \"/events/2\",\n \"ip\": \"192.168.0.5\",\n \"timestamp\": \"2026-01-01 13:00:00\"\n}"
+},
+"description": "Хит для второго события"
+}
+},
+{
+"name": "6. POST /hit — невалидный запрос (нет app)",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Валидация работает — статус 400', function() {",
+" pm.response.to.have.status(400);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "POST",
+"header": [{ "key": "Content-Type", "value": "application/json" }],
+"url": "http://localhost:9090/hit",
+"body": {
+"mode": "raw",
+"raw": "{\n \"app\": \"\",\n \"uri\": \"/events/1\",\n \"ip\": \"192.168.0.1\",\n \"timestamp\": \"2026-01-01 10:00:00\"\n}"
+},
+"description": "Проверяем что @NotBlank на поле app работает"
+}
+},
+{
+"name": "7. GET /stats — все хиты за период",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Статус 200', function() {",
+" pm.response.to.have.status(200);",
+"});",
+"pm.test('Возвращает массив', function() {",
+" const json = pm.response.json();",
+" pm.expect(json).to.be.an('array');",
+" pm.expect(json.length).to.be.above(0);",
+"});",
+"pm.test('Содержит поля app, uri, hits', function() {",
+" const json = pm.response.json();",
+" pm.expect(json[0]).to.have.property('app');",
+" pm.expect(json[0]).to.have.property('uri');",
+" pm.expect(json[0]).to.have.property('hits');",
+"});",
+"pm.test('Отсортировано по hits DESC', function() {",
+" const json = pm.response.json();",
+" if (json.length > 1) {",
+" pm.expect(json[0].hits).to.be.at.least(json[1].hits);",
+" }",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "GET",
+"url": {
+"raw": "http://localhost:9090/stats?start=2020-01-01 00:00:00&end=2030-01-01 00:00:00",
+"host": ["localhost"],
+"port": "9090",
+"path": ["stats"],
+"query": [
+{ "key": "start", "value": "2020-01-01 00:00:00" },
+{ "key": "end", "value": "2030-01-01 00:00:00" }
+]
+},
+"description": "Получаем всю статистику — /events/1 должен быть первым (больше хитов)"
+}
+},
+{
+"name": "8. GET /stats — только уникальные IP (unique=true)",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Статус 200', function() {",
+" pm.response.to.have.status(200);",
+"});",
+"pm.test('/events/1 имеет 2 уникальных ip', function() {",
+" const json = pm.response.json();",
+" const event1 = json.find(x => x.uri === '/events/1');",
+" pm.expect(event1).to.exist;",
+" pm.expect(event1.hits).to.eql(2);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "GET",
+"url": {
+"raw": "http://localhost:9090/stats?start=2020-01-01 00:00:00&end=2030-01-01 00:00:00&unique=true",
+"host": ["localhost"],
+"port": "9090",
+"path": ["stats"],
+"query": [
+{ "key": "start", "value": "2020-01-01 00:00:00" },
+{ "key": "end", "value": "2030-01-01 00:00:00" },
+{ "key": "unique", "value": "true" }
+]
+},
+"description": "Запросы 2 и 4 с одного ip — должно считаться как 2 уникальных (ip1 и ip2)"
+}
+},
+{
+"name": "9. GET /stats — фильтр по uris",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Статус 200', function() {",
+" pm.response.to.have.status(200);",
+"});",
+"pm.test('Возвращает только /events/1', function() {",
+" const json = pm.response.json();",
+" pm.expect(json.length).to.eql(1);",
+" pm.expect(json[0].uri).to.eql('/events/1');",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "GET",
+"url": {
+"raw": "http://localhost:9090/stats?start=2020-01-01 00:00:00&end=2030-01-01 00:00:00&uris=/events/1",
+"host": ["localhost"],
+"port": "9090",
+"path": ["stats"],
+"query": [
+{ "key": "start", "value": "2020-01-01 00:00:00" },
+{ "key": "end", "value": "2030-01-01 00:00:00" },
+{ "key": "uris", "value": "/events/1" }
+]
+},
+"description": "Фильтруем — должен вернуться только /events/1"
+}
+},
+{
+"name": "10. GET /stats — фильтр по нескольким uris",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Статус 200', function() {",
+" pm.response.to.have.status(200);",
+"});",
+"pm.test('Возвращает оба события', function() {",
+" const json = pm.response.json();",
+" pm.expect(json.length).to.eql(2);",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "GET",
+"url": {
+"raw": "http://localhost:9090/stats?start=2020-01-01 00:00:00&end=2030-01-01 00:00:00&uris=/events/1&uris=/events/2",
+"host": ["localhost"],
+"port": "9090",
+"path": ["stats"],
+"query": [
+{ "key": "start", "value": "2020-01-01 00:00:00" },
+{ "key": "end", "value": "2030-01-01 00:00:00" },
+{ "key": "uris", "value": "/events/1" },
+{ "key": "uris", "value": "/events/2" }
+]
+},
+"description": "Передаём два uris — должны вернуться оба"
+}
+},
+{
+"name": "11. GET /stats — неверный диапазон дат (start > end)",
+"event": [
+{
+"listen": "test",
+"script": {
+"exec": [
+"pm.test('Статус 400 при start > end', function() {",
+" pm.response.to.have.status(400);",
+"});",
+"pm.test('Есть сообщение об ошибке', function() {",
+" const json = pm.response.json();",
+" pm.expect(json).to.have.property('error');",
+"});"
+]
+}
+}
+],
+"request": {
+"method": "GET",
+"url": {
+"raw": "http://localhost:9090/stats?start=2030-01-01 00:00:00&end=2020-01-01 00:00:00",
+"host": ["localhost"],
+"port": "9090",
+"path": ["stats"],
+"query": [
+{ "key": "start", "value": "2030-01-01 00:00:00" },
+{ "key": "end", "value": "2020-01-01 00:00:00" }
+]
+},
+"description": "start позже end — ErrorHandler должен вернуть 400"
+}
+}
+]
+}

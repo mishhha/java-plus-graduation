@@ -1,4 +1,4 @@
-package dto;
+package evm.stat.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
-
 public class HitDto {
 
     @NotBlank
@@ -31,5 +29,5 @@ public class HitDto {
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @PastOrPresent(message = "timestamp не должен быть в будущем")
-    private LocalDateTime hitTimestamp;
+    private LocalDateTime timestamp;
 }

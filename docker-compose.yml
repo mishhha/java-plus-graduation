@@ -1,9 +1,13 @@
 services:
   stats-server:
-    build: stat/stat-server
+    build:
+      context: .
+      dockerfile: stat/stat-server/Dockerfile
     image: stat-server
     ports:
       - "9090:9090"
+    depends_on:
+      - stats-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - SPRING_DATASOURCE_USERNAME=stat
@@ -20,6 +24,9 @@ services:
       - POSTGRES_DB=ewm-stats
 
   ewm-service:
+    build:
+      context: .
+      dockerfile: main-service/Dockerfile
     image: ewm-service
     ports:
       - "8080:8080"
