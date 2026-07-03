@@ -1,4 +1,4 @@
-package dto;
+package evm.stat.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
