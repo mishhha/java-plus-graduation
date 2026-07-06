@@ -1,0 +1,90 @@
+package evm.main.category.service;
+
+import evm.main.category.dto.CategoryDto;
+import evm.main.category.dto.NewCategoryDto;
+import evm.main.category.mapper.CategoryMapper;
+import evm.main.category.model.Category;
+import evm.main.category.repository.CategoryRepository;
+import evm.main.exception.ConflictException;
+import evm.main.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service@RequiredArgsConstructor
+public class CategoryServiceImpl implements CategoryService {
+
+    private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
+    /* EventRepository потребуется при удалении категории: надо убедиться, что она пустая, то есть нет отнесесённых к ней событий.
+    непустую категорию удалять нельзя.
+    Когда будем сливать код в общую программу, надо будет раскомментарить и допилить метод удаления.
+    private final EventRepository eventRepository; */
+
+    @Override
+    @Transactional
+    public CategoryDto insertCategory(NewCategoryDto newCategoryDto) {
+        if (categoryRepository.existsByName(newCategoryDto.getName())) {
+            throw new ConflictException("Категория с таким именем " + newCategoryDto.getName() + " уже существует");
+        }
+        return categoryMapper.toDto(categoryRepository.save(categoryMapper.toEntity(newCategoryDto)));
+    }
+
+    @Override
+    @Transactional
+    public CategoryDto updateCategory(Long id, CategoryDto categoryDto) {
+        if (categoryRepository.existsByNameAndIdNot(categoryDto.getName(), categoryDto.getId())) {
+            throw new ConflictException(
+                    "Категория с таким именем " + categoryDto.getName() + " уже существует"
+            );
+        }
+
+        Category category = findCategoryOrRaiseException(id);
+        category.setName(categoryDto.getName());
+        return categoryMapper.toDto(categoryRepository.save(category));
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(Long id) {
+        Category category = findCategoryOrRaiseException(id);
+        /*if (eventRepository.existsByCategoryId(id)) {
+            throw new ConflictException("Категория \"" + category.getName() + "\" непустая, есть относящиеся к ней события. Удаление невозможно.");
+        }*/
+        categoryRepository.deleteById(id);
+    }
+
+    @Override
+    public CategoryDto getCategoryById(Long id) {
+        Category category = findCategoryOrRaiseException(id);
+        return categoryMapper.toDto(category);
+    }
+
+    @Override
+    public List<CategoryDto> getCategories(Integer from, Integer size) {
+        if (from < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Можно запрашивать список категорий, начиная с нулевой позиции. Передано: %d", from));
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException(
+                    String.format("Запрашиваемое кол-во категорий должно иметь ноль или более позиций. Передано: %d", size));
+        }
+
+        List<Category> allCategories = categoryRepository.findAll();
+        List<Category> result = allCategories.subList(from, Math.min(from + size, allCategories.size()));
+        return result.stream()
+                .map(categoryMapper::toDto).collect(Collectors.toList());
+
+    }
+
+    private Category findCategoryOrRaiseException(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Категория с id = " + categoryId.toString() + " не найдена!"));
+    }
+
+}
