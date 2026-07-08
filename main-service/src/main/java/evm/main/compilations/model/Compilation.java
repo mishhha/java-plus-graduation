@@ -6,6 +6,7 @@ import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
 
+@Builder
 @Entity
 @Getter
 @Setter
@@ -19,15 +20,18 @@ public class Compilation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String title;
 
-    private Boolean pinned;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean pinned = false;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "compilation_events",
             joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
+
     @ToString.Exclude
     private Set<Event> events = new HashSet<>();
 }
