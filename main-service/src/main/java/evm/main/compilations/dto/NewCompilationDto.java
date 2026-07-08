@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
@@ -17,7 +18,7 @@ import java.util.HashSet;
 public class NewCompilationDto {
 
     @Builder.Default
-    private HashSet events = new HashSet<>();
+    private Set<Long> events = new HashSet<>();
 
     @JsonProperty(defaultValue = "false")
     private Boolean pinned;
