@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 @Data
 public class ResponseRequestDto {
 
-    Long id;
     LocalDateTime created;
     Long event;
+    Long id;
     Long requester;
     Status status;
 

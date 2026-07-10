@@ -10,6 +10,6 @@ public interface RequestService {
 
     ResponseRequestDto save(Long userId, Long eventId);
 
-    ResponseRequestDto cancel(Long userId, Long eventId);
+    ResponseRequestDto cancel(Long userId, Long requestId);
 
 }
