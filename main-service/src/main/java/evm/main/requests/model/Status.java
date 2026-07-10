@@ -1,7 +1,7 @@
 package evm.main.requests.model;
 
 public enum Status {
-    REJECTED,
+    CANCELED,
     PENDING,
-    APPROVED
+    CONFIRMED
 }

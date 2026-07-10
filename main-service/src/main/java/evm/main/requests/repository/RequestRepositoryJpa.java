@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface RequestRepositoryJPA extends JpaRepository<Request, Long> {
+public interface RequestRepositoryJpa extends JpaRepository<Request, Long> {
 
     @Query("select r from Request as r where r.requester.id = ?1")
     List<Request> findAllByUserId(Long userId);

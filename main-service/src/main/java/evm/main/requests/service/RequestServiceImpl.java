@@ -8,7 +8,7 @@ import evm.main.requests.dto.ResponseRequestDto;
 import evm.main.requests.mapper.RequestMapper;
 import evm.main.requests.model.Request;
 import evm.main.requests.model.Status;
-import evm.main.requests.repository.RequestRepositoryJPA;
+import evm.main.requests.repository.RequestRepositoryJpa;
 import evm.main.users.model.User;
 import evm.main.users.repository.UserRepositoryJpa;
 import lombok.AllArgsConstructor;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class RequestServiceImpl implements RequestService {
 
     private final UserRepositoryJpa userRepository;
-    private final RequestRepositoryJPA requestRepository;
+    private final RequestRepositoryJpa requestRepository;
     private final EventRepositoryJPA eventRepository;
     private final RequestMapper mapper;
 
@@ -100,7 +100,7 @@ public class RequestServiceImpl implements RequestService {
             );
         }
 
-        findRequest.get().setStatus(Status.REJECTED);
+        findRequest.get().setStatus(Status.CANCELED);
 
         Request update = requestRepository.save(findRequest.get());
 
