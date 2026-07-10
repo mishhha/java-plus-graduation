@@ -1,5 +1,6 @@
 package evm.main.event.model;
 
+import evm.main.category.Category;
 import evm.main.users.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,7 +46,7 @@ public class Event {
 
     @Column(name = "participant_limit", nullable = false)
     @Builder.Default
-    private Integer participantLimit = 0; // лимит участников. 0 - отсутствие ограничения
+    private Integer participantLimit = 0; // Лимит участников. 0 - отсутствие ограничения
 
     @Column(name = "request_moderation", nullable = false)
     @Builder.Default

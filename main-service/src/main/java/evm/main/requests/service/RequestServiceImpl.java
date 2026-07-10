@@ -1,7 +1,7 @@
 package evm.main.requests.service;
 
 import evm.main.event.model.Event;
-import evm.main.event.repository.EventRepositoryJPA;
+import evm.main.event.repository.EventRepository;
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
 import evm.main.requests.dto.ResponseRequestDto;
@@ -26,7 +26,7 @@ public class RequestServiceImpl implements RequestService {
 
     private final UserRepositoryJpa userRepository;
     private final RequestRepositoryJpa requestRepository;
-    private final EventRepositoryJPA eventRepository;
+    private final EventRepository eventRepository;
     private final RequestMapper mapper;
 
     @Override
@@ -34,13 +34,13 @@ public class RequestServiceImpl implements RequestService {
 
         boolean findUser = userRepository.existsById(userId);
 
-        if(!findUser) {
+        if (!findUser) {
             throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
 
         List<Request> requestsList = requestRepository.findAllByUserId(userId);
 
-        if(requestsList.isEmpty()) {
+        if (requestsList.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -54,25 +54,56 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public ResponseRequestDto save(Long userId, Long eventId) {
 
-        Optional<User> findUser = userRepository.findById(userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(
+                "Пользователь с ID " + userId + " не найден"
+            ));
 
-        if(findUser.isEmpty()) {
-            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new NotFoundException(
+                "Мероприятия с ID " + eventId + " не найдено"
+            ));
+
+        if (requestRepository.existsByEventIdAndRequesterId(eventId, userId)) {
+            throw new ConflictException(
+                "Нельзя отправить повторную заявку на участие в мероприятии."
+            );
         }
 
-        Optional<Event> findEvent = eventRepository.findById(eventId);
-
-        if(findEvent.isEmpty()) {
-            throw new NotFoundException("Мероприятия с ID " + userId + " не найдено");
+        if (event.getInitiator().getId().equals(userId)) {
+            throw new ConflictException(
+                "Инициатор события не может добавить запрос на участие в своём событии."
+            );
         }
 
-        boolean findRequest = requestRepository.existsByEventIdAndRequesterId(eventId, userId);
-
-        if(findRequest) {
-            throw new ConflictException("Нельзя отправить повторную заявку на участие в мероприятии.");
+        if (event.getPublishedOn() == null) {
+            throw new ConflictException(
+                "Нельзя участвовать в неопубликованном событии."
+            );
         }
 
-        Request request = mapper.mapToRequest(findUser.get(), findEvent.get());
+        Status status;
+        if (event.getRequestModeration()) {
+            status = Status.PENDING;
+        } else {
+            status = Status.CONFIRMED;
+        }
+
+        if (status == Status.CONFIRMED && event.getParticipantLimit() > 0) {
+            long confirmedCount = requestRepository.countByEventIdAndStatus(
+                eventId,
+                Status.CONFIRMED
+            );
+
+            if (confirmedCount >= event.getParticipantLimit()) {
+                throw new ConflictException(
+                    "У события достигнут лимит запросов на участие"
+                );
+            }
+        }
+
+        Request request = mapper.mapToRequest(user, event);
+        request.setStatus(status);
 
         return mapper.mapToResponseRequestDto(requestRepository.save(request));
 
@@ -84,13 +115,13 @@ public class RequestServiceImpl implements RequestService {
 
         boolean findUser = userRepository.existsById(userId);
 
-        if(!findUser) {
+        if (!findUser) {
             throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
 
         Optional<Request> findRequest = requestRepository.findById(requestId);
 
-        if(findRequest.isEmpty()) {
+        if (findRequest.isEmpty()) {
             throw new NotFoundException("Запроса с ID " + requestId + " не найдено");
         }
 
