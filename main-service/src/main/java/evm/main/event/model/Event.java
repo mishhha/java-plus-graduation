@@ -1,5 +1,7 @@
 package evm.main.event.model;
 
+import evm.main.category.Category;
+import evm.main.users.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +29,7 @@ public class Event {
     private Category category;    // категория события (много событий под одной категорией)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "initiator_id", nullable = false)
+    @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;   // инициатор события
 
     @Column(nullable = false, length = 7000)
@@ -44,7 +46,7 @@ public class Event {
 
     @Column(name = "participant_limit", nullable = false)
     @Builder.Default
-    private Integer participantLimit = 0; // лимит участников. 0 - отсутствие ограничения
+    private Integer participantLimit = 0; // Лимит участников. 0 - отсутствие ограничения
 
     @Column(name = "request_moderation", nullable = false)
     @Builder.Default
