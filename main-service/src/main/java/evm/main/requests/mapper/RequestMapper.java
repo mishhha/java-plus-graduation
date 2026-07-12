@@ -1,6 +1,7 @@
 package evm.main.requests.mapper;
 
 import evm.main.event.model.Event;
+import evm.main.requests.dto.ParticipationRequestDto;
 import evm.main.requests.dto.ResponseRequestDto;
 import evm.main.requests.model.Request;
 import evm.main.requests.model.Status;
@@ -11,6 +12,8 @@ import java.time.LocalDateTime;
 
 @Component
 public class RequestMapper {
+    private RequestMapper() {
+    }
 
     public Request mapToRequest(User user, Event event) {
 
@@ -29,7 +32,7 @@ public class RequestMapper {
         ResponseRequestDto dto = new ResponseRequestDto();
         dto.setRequester(request.getRequester().getId());
         dto.setId(request.getId());
-        dto.setStatus(request.getStatus());
+        dto.setStatus(request.getStatus().name());
         dto.setEvent(request.getEvent().getId());
         dto.setCreated(request.getCreated());
 
@@ -37,4 +40,13 @@ public class RequestMapper {
 
     }
 
+    public static ParticipationRequestDto toDto(Request request) {
+        return ParticipationRequestDto.builder()
+                .id(request.getId())
+                .event(request.getEvent().getId())
+                .requester(request.getRequester().getId())
+                .created(request.getCreated())
+                .status(request.getStatus().name())
+                .build();
+    }
 }
