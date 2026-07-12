@@ -10,6 +10,10 @@ import evm.main.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,19 +70,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getCategories(Integer from, Integer size) {
-        if (from < 0) {
-            throw new IllegalArgumentException(
-                    String.format("Можно запрашивать список категорий, начиная с нулевой позиции. Передано: %d", from));
-        }
-        if (size <= 0) {
-            throw new IllegalArgumentException(
-                    String.format("Запрашиваемое кол-во категорий должно иметь ноль или более позиций. Передано: %d", size));
-        }
-
-        List<Category> allCategories = categoryRepository.findAll();
-        List<Category> result = allCategories.subList(from, Math.min(from + size, allCategories.size()));
-        return result.stream()
-                .map(categoryMapper::toDto).collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("name"));
+        return categoryRepository.findAll(pageable).stream()
+                .map(CategoryMapper::toDto)
+                .collect(Collectors.toList());
 
     }
 

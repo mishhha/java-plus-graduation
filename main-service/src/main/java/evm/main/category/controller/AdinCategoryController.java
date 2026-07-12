@@ -10,10 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = "/categories")
+@RequestMapping(path = "/admin/categories")
 @RequiredArgsConstructor
 @Slf4j
-public class CategoryControllerAdmin {
+public class AdinCategoryController {
     private final CategoryService service;
 
     @PostMapping
