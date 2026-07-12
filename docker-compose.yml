@@ -23,6 +23,20 @@ services:
       - POSTGRES_USER=stat
       - POSTGRES_DB=ewm-stats
 
+  ewm-db:
+    image: postgres:16.1
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_PASSWORD=ewm
+      - POSTGRES_USER=ewm
+      - POSTGRES_DB=ewm
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   ewm-service:
     build:
       context: .
@@ -35,12 +49,6 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
       - SPRING_DATASOURCE_USERNAME=ewm
       - SPRING_DATASOURCE_PASSWORD=ewm
-
-  ewm-db:
-    image: postgres:16.1
-    ports:
-      - "6542:5432"
-    environment:
-      - POSTGRES_PASSWORD=ewm
-      - POSTGRES_USER=ewm
-      - POSTGRES_DB=ewm
+    depends_on:
+      ewm-db:
+        condition: service_healthy
