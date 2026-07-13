@@ -2,22 +2,21 @@ package evm.main.category.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Table(name = "categories")
+@Data
 @Entity
-@Getter
-@Setter
+@Table(name = "categories")
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, unique = true)
-    private String name;
+    Long id;
+    @Column(nullable = false, unique = true, length = 50)
+    String name;
 }

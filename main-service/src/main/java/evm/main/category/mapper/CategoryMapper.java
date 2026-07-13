@@ -1,22 +1,25 @@
 package evm.main.category.mapper;
 
+
 import evm.main.category.dto.CategoryDto;
 import evm.main.category.dto.NewCategoryDto;
 import evm.main.category.model.Category;
 
 public class CategoryMapper {
 
+    private CategoryMapper() {
+    }
+
+    public static Category toEntity(NewCategoryDto dto) {
+        return Category.builder()
+                .name(dto.getName())
+                .build();
+    }
+
     public static CategoryDto toDto(Category category) {
-        CategoryDto categoryDto = new CategoryDto();
-        categoryDto.setId(category.getId());
-        categoryDto.setName(category.getName());
-        return categoryDto;
+        return CategoryDto.builder()
+                .id(category.getId())
+                .name(category.getName())
+                .build();
     }
-
-    public static Category toEntity(NewCategoryDto categoryDto) {
-        Category category = new Category();
-        category.setName(categoryDto.getName());
-        return category;
-    }
-
 }

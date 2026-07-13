@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final UserRepositoryJpa userRepositoryJpa;
     private final UserMapper userMapper;
@@ -46,15 +46,15 @@ public class UserServiceImpl implements UserService{
     @Override
     public List<UserResponseDto> findUsersByIds(List<Long> ids) {
 
-        if(ids == null || ids.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<User> users = userRepositoryJpa.findAllById(ids);
 
         return users.stream()
-            .map(userMapper::mapToUserResponseDto)
-            .toList();
+                .map(userMapper::mapToUserResponseDto)
+                .toList();
     }
 
     @Override
@@ -63,8 +63,8 @@ public class UserServiceImpl implements UserService{
         Pageable pageable = PageRequest.of(from / size, size);
 
         return userRepositoryJpa.findAll(pageable)
-            .map(userMapper::mapToUserResponseDto)
-            .getContent();
+                .map(userMapper::mapToUserResponseDto)
+                .getContent();
 
     }
 
@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService{
 
         boolean checkUser = userRepositoryJpa.existsById(userId);
 
-        if(!checkUser) {
+        if (!checkUser) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден.");
         }
 
