@@ -5,6 +5,7 @@ import evm.main.category.dto.NewCategoryDto;
 import evm.main.category.mapper.CategoryMapper;
 import evm.main.category.model.Category;
 import evm.main.category.repository.CategoryRepository;
+import evm.main.event.repository.EventRepository;
 import evm.main.exception.ConflictException;
 import evm.main.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    /* EventRepository потребуется при удалении категории: надо убедиться, что она пустая, то есть нет отнесесённых к ней событий.
-    непустую категорию удалять нельзя.
-    Когда будем сливать код в общую программу, надо будет раскомментарить и допилить метод удаления.
-    private final EventRepository eventRepository; */
+    private final EventRepository eventRepository;
 
     @Override
     @Transactional
@@ -41,7 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDto updateCategory(Long id, CategoryDto categoryDto) {
-        if (categoryRepository.existsByNameAndIdNot(categoryDto.getName(), categoryDto.getId())) {
+        if (categoryRepository.existsByNameAndIdNot(categoryDto.getName(), id)) {
             throw new ConflictException(
                     "Категория с таким именем " + categoryDto.getName() + " уже существует"
             );
@@ -56,9 +54,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(Long id) {
         Category category = findCategoryOrRaiseException(id);
-        /*if (eventRepository.existsByCategoryId(id)) {
+        if (eventRepository.existsByCategoryId(id)) {
             throw new ConflictException("Категория \"" + category.getName() + "\" непустая, есть относящиеся к ней события. Удаление невозможно.");
-        }*/
+        }
         categoryRepository.deleteById(id);
     }
 

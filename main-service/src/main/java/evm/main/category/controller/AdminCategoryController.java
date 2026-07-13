@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = "/admin/categories")
 @RequiredArgsConstructor
 @Slf4j
-public class AdinCategoryController {
+public class AdminCategoryController {
     private final CategoryService service;
 
     @PostMapping
