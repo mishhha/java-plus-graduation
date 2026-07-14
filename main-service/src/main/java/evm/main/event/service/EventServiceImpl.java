@@ -8,6 +8,7 @@ import evm.main.event.mapper.LocationMapper;
 import evm.main.event.model.Event;
 import evm.main.event.model.EventState;
 import evm.main.event.repository.EventRepository;
+import evm.main.event.repository.EventSpecification;
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
 import evm.main.requests.dto.EventRequestStatusUpdateRequest;
@@ -28,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,25 +70,23 @@ public class EventServiceImpl implements EventService {
             throw new IllegalArgumentException("rangeStart не может быть позже rangeEnd");
         }
 
-        // Если диапазон не указан — берём события позже текущего момента
-        LocalDateTime start = rangeStart != null ? rangeStart : LocalDateTime.now();
-
-        // Фиксируем обращение в сервисе статистики
         sendHit(request);
 
-        List<Long> categoryIds = (categories == null || categories.isEmpty()) ? null : categories;
-
-        // Пагинация без сортировки — если сортируем по VIEWS,
-        // сортировку делаем после получения данных из статистики
-        Pageable pageable = PageRequest.of(from / size, size);
-
-        List<Event> events = eventRepository.findPublicEvents(
-                text, categoryIds, paid, start, rangeEnd, pageable);
-
-        if (events.isEmpty()) {
-            return List.of();
+        // Сортировка
+        Pageable pageable;
+        if ("EVENT_DATE".equals(sort)) {
+            pageable = PageRequest.of(from / size, size,
+                    Sort.by("eventDate").ascending());
+        } else {
+            pageable = PageRequest.of(from / size, size);
         }
 
+        Specification<Event> spec = EventSpecification.publicFilter(
+                text, categories, paid, rangeStart, rangeEnd);
+
+        List<Event> events = eventRepository.findAll(spec, pageable).getContent();
+
+        // Фильтрация по доступности
         if (onlyAvailable != null && onlyAvailable) {
             Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
             events = events.stream()
@@ -323,15 +323,19 @@ public class EventServiceImpl implements EventService {
                                              List<Long> categories,
                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                              Integer from, Integer size) {
-        // Заменяем null на пустые списки — передаём строки как есть
-        List<Long> userIds = (users == null || users.isEmpty()) ? null : users;
-        List<String> stateStrings = (states == null || states.isEmpty()) ? null : states;
-        List<Long> categoryIds = (categories == null || categories.isEmpty()) ? null : categories;
+//        // Заменяем null на пустые списки — передаём строки как есть
+//        List<Long> userIds = (users == null || users.isEmpty()) ? null : users;
+//        List<String> stateStrings = (states == null || states.isEmpty()) ? null : states;
+//        List<Long> categoryIds = (categories == null || categories.isEmpty()) ? null : categories;
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("id").ascending());
 
-        List<Event> events = eventRepository.findAdminEvents(
-                userIds, stateStrings, categoryIds, rangeStart, rangeEnd, pageable);
+        Specification<Event> spec = EventSpecification.adminFilter(users, states, categories, rangeStart, rangeEnd);
+
+//        List<Event> events = eventRepository.findAdminEvents(
+//                userIds, stateStrings, categoryIds, rangeStart, rangeEnd, pageable);
+
+        List<Event> events = eventRepository.findAll(spec, pageable).getContent();
 
         Map<Long, Long> viewsMap = getViewsMap(events);
         Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
@@ -510,7 +514,7 @@ public class EventServiceImpl implements EventService {
 
     private void validateEventDate(LocalDateTime eventDate, int minHours) {
         if (eventDate.isBefore(LocalDateTime.now().plusHours(minHours))) {
-            throw new ConflictException(
+            throw new IllegalArgumentException(
                     "Поле: eventDate. Error: должно содержать дату не ранее чем через "
                             + minHours + " час(а) от текущего момента. Value: " + eventDate);
         }

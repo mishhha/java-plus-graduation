@@ -1,6 +1,7 @@
 package evm.main.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,8 +30,12 @@ public class UpdateEventAdminRequest {
     private LocalDateTime eventDate;
 
     private LocationDto location;
+
     private Boolean paid;
+
+    @PositiveOrZero
     private Integer participantLimit;
+
     private Boolean requestModeration;
 
     // PUBLISH_EVENT — опубликовать событие

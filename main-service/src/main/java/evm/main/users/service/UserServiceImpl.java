@@ -2,7 +2,6 @@ package evm.main.users.service;
 
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
-import evm.main.exceptions.ValidationException;
 import evm.main.users.dto.NewRequestUserDto;
 import evm.main.users.dto.UserResponseDto;
 import evm.main.users.mapper.UserMapper;
@@ -33,10 +32,6 @@ public class UserServiceImpl implements UserService {
 
         if (checkUser) {
             throw new ConflictException("Пользователь с email " + newUserDto.getEmail() + " уже создан.");
-        }
-
-        if (newUserDto.getName() == null || newUserDto.getName().isBlank()) {
-            throw new ValidationException("Имя пользователя не может быть пустым.");
         }
 
         User user = userRepositoryJpa.save(userMapper.mapToUser(newUserDto));

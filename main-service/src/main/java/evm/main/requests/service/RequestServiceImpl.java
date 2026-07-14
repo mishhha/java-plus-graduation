@@ -83,10 +83,11 @@ public class RequestServiceImpl implements RequestService {
         }
 
         Status status;
-        if (event.getRequestModeration()) {
-            status = Status.PENDING;
-        } else {
+        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
+            // модерация выключена или лимит = 0 --> подтверждаем автоматически
             status = Status.CONFIRMED;
+        } else {
+            status = Status.PENDING;
         }
 
         if (status == Status.CONFIRMED && event.getParticipantLimit() > 0) {
