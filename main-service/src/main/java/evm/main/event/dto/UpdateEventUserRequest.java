@@ -1,6 +1,7 @@
 package evm.main.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,8 +30,12 @@ public class UpdateEventUserRequest {
     private LocalDateTime eventDate;    // новые дата и время на которые намечено событие
 
     private LocationDto location;   // широта и долгота места проведения события
+
     private Boolean paid;   // Новое значение флага о платности мероприятия
+
+    @PositiveOrZero
     private Integer participantLimit;   //Новый лимит пользователей
+
     private Boolean requestModeration;  //Нужна ли пре-модерация заявок на участие
 
     // SEND_TO_REVIEW — отправить на модерацию
