@@ -7,14 +7,7 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      stats-db:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      - stats-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - SPRING_DATASOURCE_USERNAME=stat
@@ -25,11 +18,6 @@ services:
     container_name: postgres-ewm-stat-db
     ports:
       - "6541:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U stat -d ewm-stats" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
     environment:
       - POSTGRES_PASSWORD=stat
       - POSTGRES_USER=stat
@@ -43,11 +31,6 @@ services:
       - POSTGRES_PASSWORD=ewm
       - POSTGRES_USER=ewm
       - POSTGRES_DB=ewm
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   ewm-service:
     build:
@@ -56,13 +39,11 @@ services:
     image: ewm-service
     ports:
       - "8080:8080"
+    depends_on:
+      - ewm-db
+      - stats-server
     environment:
       - STATS_SERVER_URL=http://stats-server:9090
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
       - SPRING_DATASOURCE_USERNAME=ewm
       - SPRING_DATASOURCE_PASSWORD=ewm
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-      stats-server:
-        condition: service_healthy
