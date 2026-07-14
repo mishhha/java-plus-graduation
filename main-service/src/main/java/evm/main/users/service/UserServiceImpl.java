@@ -35,10 +35,6 @@ public class UserServiceImpl implements UserService {
             throw new ConflictException("Пользователь с email " + newUserDto.getEmail() + " уже создан.");
         }
 
-        if (newUserDto.getName() == null || newUserDto.getName().isBlank()) {
-            throw new ValidationException("Имя пользователя не может быть пустым.");
-        }
-
         User user = userRepositoryJpa.save(userMapper.mapToUser(newUserDto));
         return userMapper.mapToUserResponseDto(user);
     }

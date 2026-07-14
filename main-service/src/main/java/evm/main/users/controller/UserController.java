@@ -3,6 +3,7 @@ package evm.main.users.controller;
 import evm.main.users.dto.NewRequestUserDto;
 import evm.main.users.dto.UserResponseDto;
 import evm.main.users.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +21,9 @@ public class UserController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<UserResponseDto> findUsers(
-        @RequestParam(value = "ids", required = false) Long[] ids,
-        @RequestParam(value = "from", defaultValue = "0") Integer from,
-        @RequestParam(value = "size", defaultValue = "10") Integer size
-    ) {
+            @RequestParam(value = "ids", required = false) Long[] ids,
+            @RequestParam(value = "from", defaultValue = "0") Integer from,
+            @RequestParam(value = "size", defaultValue = "10") Integer size) {
         if (ids == null || ids.length == 0) {
             return userService.findUsersByParam(from, size);
         }
@@ -33,16 +33,14 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto save(
-        @RequestBody NewRequestUserDto newRequestUserDto
-        ) {
+            @Valid @RequestBody NewRequestUserDto newRequestUserDto) {
         return userService.save(newRequestUserDto);
     }
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-        @PathVariable Long userId
-    ) {
+            @PathVariable Long userId) {
         userService.delete(userId);
     }
 
