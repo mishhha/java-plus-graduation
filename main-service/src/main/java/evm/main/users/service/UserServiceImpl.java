@@ -2,7 +2,6 @@ package evm.main.users.service;
 
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
-import evm.main.exceptions.ValidationException;
 import evm.main.users.dto.NewRequestUserDto;
 import evm.main.users.dto.UserResponseDto;
 import evm.main.users.mapper.UserMapper;
