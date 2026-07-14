@@ -1,6 +1,5 @@
 services:
   stats-server:
-    restart: on-failure
     build:
       context: .
       dockerfile: stat/stat-server/Dockerfile
@@ -15,7 +14,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=stat
 
   stats-db:
-    image: postgres:16.1
+    image: postgres:16.1-alpine
     container_name: postgres-ewm-stat-db
     ports:
       - "6541:5432"
@@ -25,7 +24,7 @@ services:
       - POSTGRES_DB=ewm-stats
 
   ewm-db:
-    image: postgres:16.1
+    image: postgres:16.1-alpine
     ports:
       - "6542:5432"
     environment:
@@ -34,7 +33,6 @@ services:
       - POSTGRES_DB=ewm
 
   ewm-service:
-    restart: on-failure
     build:
       context: .
       dockerfile: main-service/Dockerfile
