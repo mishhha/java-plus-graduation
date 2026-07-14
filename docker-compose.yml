@@ -1,5 +1,6 @@
 services:
   stats-server:
+    restart: on-failure
     build:
       context: .
       dockerfile: stat/stat-server/Dockerfile
@@ -33,6 +34,7 @@ services:
       - POSTGRES_DB=ewm
 
   ewm-service:
+    restart: on-failure
     build:
       context: .
       dockerfile: main-service/Dockerfile
