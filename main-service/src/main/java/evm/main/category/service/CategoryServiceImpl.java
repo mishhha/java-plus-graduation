@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
     private final EventRepository eventRepository;
 
     @Override
@@ -33,7 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryRepository.existsByName(newCategoryDto.getName())) {
             throw new ConflictException("Категория с таким именем " + newCategoryDto.getName() + " уже существует");
         }
-        return categoryMapper.toDto(categoryRepository.save(categoryMapper.toEntity(newCategoryDto)));
+        return CategoryMapper.toDto(categoryRepository.save(CategoryMapper.toEntity(newCategoryDto)));
     }
 
     @Override
@@ -47,7 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category category = findCategoryOrRaiseException(id);
         category.setName(categoryDto.getName());
-        return categoryMapper.toDto(categoryRepository.save(category));
+        return CategoryMapper.toDto(categoryRepository.save(category));
     }
 
     @Override
@@ -63,7 +62,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto getCategoryById(Long id) {
         Category category = findCategoryOrRaiseException(id);
-        return categoryMapper.toDto(category);
+        return CategoryMapper.toDto(category);
     }
 
     @Override
