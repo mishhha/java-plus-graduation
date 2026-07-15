@@ -3,7 +3,6 @@
 # COPY main-service/target/*.jar app.jar
 # EXPOSE 8080
 # ENTRYPOINT ["java", "-jar", "app.jar"]
-FROM postgres:16.1 AS db
 FROM eclipse-temurin:21-jre-jammy
 VOLUME /tmp
 ARG JAR_FILE=target/*.jar
