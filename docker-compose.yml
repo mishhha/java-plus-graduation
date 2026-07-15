@@ -1,8 +1,8 @@
 services:
   stats-server:
     build:
-      context: .
-      dockerfile: stat/stat-server/Dockerfile
+      context: stat/stat-server
+      dockerfile: Dockerfile
     image: stat-server
     ports:
       - "9090:9090"
@@ -34,8 +34,8 @@ services:
 
   ewm-service:
     build:
-      context: .
-      dockerfile: main-service/Dockerfile
+      context: main-service
+      dockerfile: Dockerfile
     image: ewm-service
     ports:
       - "8080:8080"
