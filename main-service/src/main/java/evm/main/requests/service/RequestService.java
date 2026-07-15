@@ -1,15 +1,15 @@
 package evm.main.requests.service;
 
-import evm.main.requests.dto.ResponseRequestDto;
+import evm.main.requests.dto.ParticipationRequestDto;
 
 import java.util.List;
 
 public interface RequestService {
 
-    List<ResponseRequestDto> findById(Long userId);
+    List<ParticipationRequestDto> findById(Long userId);
 
-    ResponseRequestDto save(Long userId, Long eventId);
+    ParticipationRequestDto save(Long userId, Long eventId);
 
-    ResponseRequestDto cancel(Long userId, Long requestId);
+    ParticipationRequestDto cancel(Long userId, Long requestId);
 
 }

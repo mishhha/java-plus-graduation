@@ -14,7 +14,6 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "compilations")
-
 public class Compilation {
 
     @Id
@@ -33,6 +32,6 @@ public class Compilation {
             joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
 
-    @ToString.Exclude
+    @Builder.Default
     private Set<Event> events = new HashSet<>();
 }

@@ -52,6 +52,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepositoryJpa userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepositoryJpa requestRepository;
+    private final RequestMapper mapper;
     private final StatsClient statsClient;
 
 // =========================================================================
@@ -221,7 +222,7 @@ public class EventServiceImpl implements EventService {
         }
 
         return requestRepository.findAllByEventId(eventId).stream()
-                .map(RequestMapper::toDto)
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -245,7 +246,7 @@ public class EventServiceImpl implements EventService {
 
             return EventRequestStatusUpdateResult.builder()
                     .confirmedRequests(requests.stream()
-                            .map(RequestMapper::toDto)
+                            .map(mapper::toDto)
                             .collect(Collectors.toList()))
                     .rejectedRequests(List.of())
                     .build();
@@ -307,9 +308,9 @@ public class EventServiceImpl implements EventService {
 
         return EventRequestStatusUpdateResult.builder()
                 .confirmedRequests(finalConfirmed.stream()
-                        .map(RequestMapper::toDto).collect(Collectors.toList()))
+                        .map(mapper::toDto).collect(Collectors.toList()))
                 .rejectedRequests(finalRejected.stream()
-                        .map(RequestMapper::toDto).collect(Collectors.toList()))
+                        .map(mapper::toDto).collect(Collectors.toList()))
                 .build();
     }
 
@@ -323,17 +324,10 @@ public class EventServiceImpl implements EventService {
                                              List<Long> categories,
                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                              Integer from, Integer size) {
-//        // Заменяем null на пустые списки — передаём строки как есть
-//        List<Long> userIds = (users == null || users.isEmpty()) ? null : users;
-//        List<String> stateStrings = (states == null || states.isEmpty()) ? null : states;
-//        List<Long> categoryIds = (categories == null || categories.isEmpty()) ? null : categories;
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("id").ascending());
 
         Specification<Event> spec = EventSpecification.adminFilter(users, states, categories, rangeStart, rangeEnd);
-
-//        List<Event> events = eventRepository.findAdminEvents(
-//                userIds, stateStrings, categoryIds, rangeStart, rangeEnd, pageable);
 
         List<Event> events = eventRepository.findAll(spec, pageable).getContent();
 

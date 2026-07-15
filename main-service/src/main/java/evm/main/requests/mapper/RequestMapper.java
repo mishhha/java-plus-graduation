@@ -2,7 +2,6 @@ package evm.main.requests.mapper;
 
 import evm.main.event.model.Event;
 import evm.main.requests.dto.ParticipationRequestDto;
-import evm.main.requests.dto.ResponseRequestDto;
 import evm.main.requests.model.Request;
 import evm.main.requests.model.Status;
 import evm.main.users.model.User;
@@ -27,20 +26,7 @@ public class RequestMapper {
 
     }
 
-    public ResponseRequestDto mapToResponseRequestDto(Request request) {
-
-        ResponseRequestDto dto = new ResponseRequestDto();
-        dto.setRequester(request.getRequester().getId());
-        dto.setId(request.getId());
-        dto.setStatus(request.getStatus().name());
-        dto.setEvent(request.getEvent().getId());
-        dto.setCreated(request.getCreated());
-
-        return dto;
-
-    }
-
-    public static ParticipationRequestDto toDto(Request request) {
+    public ParticipationRequestDto toDto(Request request) {
         return ParticipationRequestDto.builder()
                 .id(request.getId())
                 .event(request.getEvent().getId())

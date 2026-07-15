@@ -4,7 +4,7 @@ import evm.main.event.model.Event;
 import evm.main.event.repository.EventRepository;
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
-import evm.main.requests.dto.ResponseRequestDto;
+import evm.main.requests.dto.ParticipationRequestDto;
 import evm.main.requests.mapper.RequestMapper;
 import evm.main.requests.model.Request;
 import evm.main.requests.model.Status;
@@ -30,7 +30,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestMapper mapper;
 
     @Override
-    public List<ResponseRequestDto> findById(Long userId) {
+    public List<ParticipationRequestDto> findById(Long userId) {
 
         boolean findUser = userRepository.existsById(userId);
 
@@ -45,14 +45,14 @@ public class RequestServiceImpl implements RequestService {
         }
 
         return requestsList.stream()
-            .map(mapper::mapToResponseRequestDto)
+            .map(mapper::toDto)
             .toList();
 
     }
 
     @Override
     @Transactional
-    public ResponseRequestDto save(Long userId, Long eventId) {
+    public ParticipationRequestDto save(Long userId, Long eventId) {
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException(
@@ -106,13 +106,13 @@ public class RequestServiceImpl implements RequestService {
         Request request = mapper.mapToRequest(user, event);
         request.setStatus(status);
 
-        return mapper.mapToResponseRequestDto(requestRepository.save(request));
+        return mapper.toDto(requestRepository.save(request));
 
     }
 
     @Override
     @Transactional
-    public ResponseRequestDto cancel(Long userId, Long requestId) {
+    public ParticipationRequestDto cancel(Long userId, Long requestId) {
 
         boolean findUser = userRepository.existsById(userId);
 
@@ -136,7 +136,7 @@ public class RequestServiceImpl implements RequestService {
 
         Request update = requestRepository.save(findRequest.get());
 
-        return mapper.mapToResponseRequestDto(update);
+        return mapper.toDto(update);
     }
 
 }
