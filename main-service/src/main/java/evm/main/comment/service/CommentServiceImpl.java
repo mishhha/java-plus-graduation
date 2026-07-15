@@ -2,6 +2,7 @@ package evm.main.comment.service;
 
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
+import evm.main.comment.mappper.CommentMapper;
 import evm.main.comment.repository.CommentRepository;
 import evm.main.event.repository.EventRepository;
 import evm.main.users.repository.UserRepositoryJpa;
