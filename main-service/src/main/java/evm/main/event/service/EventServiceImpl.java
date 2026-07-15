@@ -52,6 +52,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepositoryJpa userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepositoryJpa requestRepository;
+    private final RequestMapper mapper;
     private final StatsClient statsClient;
 
 // =========================================================================
@@ -221,7 +222,7 @@ public class EventServiceImpl implements EventService {
         }
 
         return requestRepository.findAllByEventId(eventId).stream()
-                .map(RequestMapper::toDto)
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -245,7 +246,7 @@ public class EventServiceImpl implements EventService {
 
             return EventRequestStatusUpdateResult.builder()
                     .confirmedRequests(requests.stream()
-                            .map(RequestMapper::toDto)
+                            .map(mapper::toDto)
                             .collect(Collectors.toList()))
                     .rejectedRequests(List.of())
                     .build();
@@ -307,9 +308,9 @@ public class EventServiceImpl implements EventService {
 
         return EventRequestStatusUpdateResult.builder()
                 .confirmedRequests(finalConfirmed.stream()
-                        .map(RequestMapper::toDto).collect(Collectors.toList()))
+                        .map(mapper::toDto).collect(Collectors.toList()))
                 .rejectedRequests(finalRejected.stream()
-                        .map(RequestMapper::toDto).collect(Collectors.toList()))
+                        .map(mapper::toDto).collect(Collectors.toList()))
                 .build();
     }
 

@@ -1,6 +1,6 @@
 package evm.main.requests.controller;
 
-import evm.main.requests.dto.ResponseRequestDto;
+import evm.main.requests.dto.ParticipationRequestDto;
 import evm.main.requests.service.RequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,13 +17,13 @@ public class RequestController {
 
     @GetMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public List<ResponseRequestDto> findById(@PathVariable Long userId) {
+    public List<ParticipationRequestDto> findById(@PathVariable Long userId) {
         return service.findById(userId);
     }
 
     @PostMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseRequestDto save(
+    public ParticipationRequestDto save(
         @PathVariable Long userId,
         @RequestParam(value = "eventId") Long eventId
     ) {
@@ -32,7 +32,7 @@ public class RequestController {
 
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseRequestDto cancel(
+    public ParticipationRequestDto cancel(
         @PathVariable Long userId,
         @PathVariable Long requestId
     ) {
