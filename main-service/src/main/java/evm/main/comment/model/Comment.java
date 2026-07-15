@@ -1,8 +1,8 @@
 package evm.main.comment.model;
 
 
-import evm.main.event.model.Event;
-import evm.main.users.model.User;
+import evm.main.event.dto.EventShortDto;
+import evm.main.users.dto.UserShortDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,14 +28,14 @@ public class Comment {
     LocalDateTime publishedDate;
 
     @ToString.Exclude
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "author_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    User author;
+    UserShortDto author;
 
     @ToString.Exclude
     @JoinColumn(name = "event_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    Event event;
+    EventShortDto event;
 
 
 }
