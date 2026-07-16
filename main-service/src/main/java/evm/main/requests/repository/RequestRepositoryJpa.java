@@ -32,6 +32,11 @@ public interface RequestRepositoryJpa extends JpaRepository<Request, Long> {
     // Все заявки на конкретное событие
     List<Request> findAllByEventId(Long eventId);
 
-    // Заявки по списку id — для массового подтверждения/отклонения
-    List<Request> findAllByIdIn(List<Long> ids);
+    // Заявки по списку ID, отфильтрованные по принадлежности к конкретному событию
+    @Query("SELECT r " +
+            "FROM Request r " +
+            "WHERE r.id IN :ids " +
+            "AND r.event.id = :eventId")
+    List<Request> findAllByIdInAndEventId(@Param("ids") List<Long> ids, @Param("eventId") Long eventId);
+
 }

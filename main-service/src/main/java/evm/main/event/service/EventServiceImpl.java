@@ -86,10 +86,10 @@ public class EventServiceImpl implements EventService {
                 text, categories, paid, rangeStart, rangeEnd);
 
         List<Event> events = eventRepository.findAll(spec, pageable).getContent();
+        Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
 
         // Фильтрация по доступности
         if (onlyAvailable != null && onlyAvailable) {
-            Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
             events = events.stream()
                     .filter(e -> e.getParticipantLimit() == 0 ||
                             e.getParticipantLimit() > confirmedMap.getOrDefault(e.getId(), 0L))
@@ -98,7 +98,6 @@ public class EventServiceImpl implements EventService {
 
         // Получаем статистику и количество заявок для всех событий разом
         Map<Long, Long> viewsMap = getViewsMap(events);
-        Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
 
         List<EventShortDto> result = events.stream()
                 .map(e -> EventMapper.toShortDto(
@@ -233,14 +232,28 @@ public class EventServiceImpl implements EventService {
         checkUserExists(userId);
         Event event = getEventOrThrow(eventId);
 
+        // Проверка прав организатора
         if (!event.getInitiator().getId().equals(userId)) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено");
+        }
+
+        List<Long> requestedIds = dto.getRequestIds();
+
+        // Получаем заявки только для этого события
+        List<Request> requests = requestRepository.findAllByIdInAndEventId(dto.getRequestIds(), eventId);
+
+        if (requests.size() != requestedIds.size()) {
+            throw new IllegalArgumentException("Обнаружены ID заявок, не принадлежащих данному событию. " +
+                    "Проверьте корректность переданных requestIds.");
+        }
+
+        if (requests.isEmpty()) {
+            throw new NotFoundException("Заявки не найдены для события " + eventId);
         }
 
         // Если модерация отключена или лимит = 0 — подтверждение не требуется
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             // Автоматически подтверждаем все заявки
-            List<Request> requests = requestRepository.findAllByIdIn(dto.getRequestIds());
             requests.forEach(r -> r.setStatus(Status.CONFIRMED));
             requestRepository.saveAll(requests);
 
@@ -259,13 +272,12 @@ public class EventServiceImpl implements EventService {
             throw new ConflictException("Лимит участников достигнут");
         }
 
-        List<Request> requests =
-                requestRepository.findAllByIdIn(dto.getRequestIds());
-
         // Проверяем что все заявки в статусе PENDING
         requests.forEach(r -> {
             if (!Status.PENDING.equals(r.getStatus())) {
-                throw new ConflictException("Заявка должна находиться в статусе PENDING");
+                throw new ConflictException("Заявка с id=" + r.getId() +
+                        " должна находиться в статусе PENDING, текущий статус: " + r.getStatus()
+                );
             }
         });
 
