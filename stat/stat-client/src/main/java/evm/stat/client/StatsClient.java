@@ -3,13 +3,11 @@ package evm.stat.client;
 import evm.stat.dto.HitDto;
 import evm.stat.dto.ViewStatsDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.StringJoiner;
 
 @Slf4j
 public class StatsClient extends BaseClient {
@@ -35,29 +33,17 @@ public class StatsClient extends BaseClient {
                                        LocalDateTime end,
                                        List<String> uris,
                                        boolean unique) {
-        //кодируем дату, что убирать пробелы
-        String encodedStart = encode(start.format(FORMATTER));
-        String encodedEnd = encode(end.format(FORMATTER));
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/stats")
+                .queryParam("start", start.format(FORMATTER))
+                .queryParam("end", end.format(FORMATTER))
+                .queryParam("unique", unique);
 
-        StringBuilder uriBuilder = new StringBuilder("/stats")
-                .append("?start=").append(encodedStart)
-                .append("&end=").append(encodedEnd)
-                .append("&unique=").append(unique);
-
-        //список URI для фильтрации (null — все URI)
         if (uris != null && !uris.isEmpty()) {
-            // /stats?...&uris=/events/1&uris=/events/2
-            StringJoiner joiner = new StringJoiner("&uris=", "&uris=", "");
-            //добавляем каждый эл. в joiner
-            uris.forEach(joiner::add);
-            uriBuilder.append(joiner);
+            uris.forEach(uri -> builder.queryParam("uris", uri));
         }
 
-        log.debug("Запрашиваем статистику: {}", uriBuilder);
-        return getList(uriBuilder.toString(), ViewStatsDto[].class);
-    }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+        // build(false) — не кодировать повторно
+        String url = builder.build(false).toUriString();
+        return getList(url, ViewStatsDto[].class);
     }
 }
