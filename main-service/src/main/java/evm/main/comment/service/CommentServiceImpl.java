@@ -38,15 +38,7 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto createComment(NewCommentDto dto) {
         Event event = findEventOrRaiseException(dto.getEventId());
         User author = findUserOrRaiseException(dto.getAuthorId());
-
-        // пока так, потом дописать методы вычисления значений из БД
-        Long eventViewsCnt = 0L;
-        Long eventConfirmedRequestsCnt = 0L;
-
-        Comment c = CommentMapper.toEntity(dto,
-                UserMapper.toShortDto(author),
-                EventMapper.toShortDto(event, eventViewsCnt, eventConfirmedRequestsCnt)
-                );
+        Comment c = CommentMapper.toEntity(dto, author, event);
         Comment saved = commentRepository.save(c);
         return CommentMapper.toDto(saved);
     }

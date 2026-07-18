@@ -3,20 +3,20 @@ package evm.main.comment.mappper;
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
 import evm.main.comment.model.Comment;
-import evm.main.event.dto.EventShortDto;
-import evm.main.users.dto.UserShortDto;
+import evm.main.event.model.Event;
+import evm.main.users.model.User;
 
 public class CommentMapper {
 
     private CommentMapper() {
     }
 
-    public static Comment toEntity(NewCommentDto dto, UserShortDto userShortDto, EventShortDto eventShortDto) {
+    public static Comment toEntity(NewCommentDto dto, User user, Event event) {
         return Comment.builder()
                 .text(dto.getText())
                 .publishedDate(dto.getPublishedDate())
-                .author(userShortDto)
-                .event(eventShortDto)
+                .author(user)
+                .event(event)
                 .build();
     }
 

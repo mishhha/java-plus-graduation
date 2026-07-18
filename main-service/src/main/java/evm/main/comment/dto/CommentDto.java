@@ -1,8 +1,8 @@
 package evm.main.comment.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import evm.main.event.dto.EventShortDto;
-import evm.main.users.dto.UserShortDto;
+import evm.main.event.model.Event;
+import evm.main.users.model.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -30,10 +30,10 @@ public class CommentDto {
     private LocalDateTime publishedDate;
 
     @NotNull
-    private UserShortDto author;
+    private User author;
 
     @NotNull
-    private EventShortDto event;
+    private Event event;
 
 }
 
