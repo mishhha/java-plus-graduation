@@ -2,6 +2,7 @@ package evm.main.comment.service;
 
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
+import evm.main.comment.dto.UpdateCommentDto;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface CommentService {
 
     void deleteAllCommentByEvent(Long eventId);
 
-    CommentDto updateComment(Long commentId, NewCommentDto dto);
+    CommentDto updateComment(UpdateCommentDto dto);
 
     CommentDto getComment(Long commentId);
 

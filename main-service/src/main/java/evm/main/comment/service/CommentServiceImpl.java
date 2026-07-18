@@ -1,8 +1,8 @@
 package evm.main.comment.service;
 
-import evm.main.category.model.Category;
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
+import evm.main.comment.dto.UpdateCommentDto;
 import evm.main.comment.mappper.CommentMapper;
 import evm.main.comment.model.Comment;
 import evm.main.comment.repository.CommentRepository;
@@ -13,10 +13,14 @@ import evm.main.users.model.User;
 import evm.main.users.repository.UserRepositoryJpa;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -25,49 +29,66 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final CommentMapper commentMapper;
     private final UserRepositoryJpa userRepository;
     private final EventRepository eventRepository;
 
     @Override
-    CommentDto createComment(NewCommentDto dto) {
-      //
-    };
+    public CommentDto createComment(NewCommentDto dto) {
+        Event event = findEventOrRaiseException(dto.getEvent().getId());
+        User author = findUserOrRaiseException(dto.getAuthor().getId());
+        Comment c = CommentMapper.toEntity(dto, dto.getAuthor(), dto.getEvent());
+        Comment saved = commentRepository.save(c);
+        return CommentMapper.toDto(saved);
+    }
 
     @Override
-    void deleteCommentById(Long commentId) {
-        //
-    };
+    public void deleteCommentById(Long commentId) {
+        commentRepository.deleteById(findCommentOrRaiseException(commentId).getId());
+    }
 
     @Override
-    void deleteAllCommentsByAuthor(Long authorId) {
-        //
-    };
+    public void deleteAllCommentsByAuthor(Long authorId) {
+        User author = findUserOrRaiseException(authorId);
+        commentRepository.deleteAllCommentsByAuthorId(author.getId());
+    }
 
     @Override
-    void deleteAllCommentByEvent(Long eventId) {
-        //
-    };
+    public void deleteAllCommentByEvent(Long eventId) {
+        Event e = findEventOrRaiseException(eventId);
+        commentRepository.deleteAllCommentsByEventId(e.getId());
+    }
 
     @Override
-    CommentDto updateComment(Long commentId, NewCommentDto dto) {
-        //
-    };
+    public CommentDto updateComment(UpdateCommentDto dto) {
+        Comment c = findCommentOrRaiseException(dto.getId());
+        c.setText(dto.getText());
+        Comment saved = commentRepository.save(c);
+        return CommentMapper.toDto(saved);
+    }
 
     @Override
-    CommentDto getComment(Long commentId) {
-        //
-    };
+    public CommentDto getComment(Long commentId) {
+        Comment comment = findCommentOrRaiseException(commentId);
+        return CommentMapper.toDto(comment);
+    }
 
     @Override
-    List<CommentDto> getAllCommentsByEvent(Long eventId, Integer from, Integer size) {
-        //
-    };
+    public List<CommentDto> getAllCommentsByEvent(Long eventId, Integer from, Integer size) {
+        Event e = findEventOrRaiseException(eventId);
+        Pageable p = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "published_date"));
+        return commentRepository.findAllCommentsByEventId(e.getId(), p).stream()
+                .map(CommentMapper::toDto)
+                .collect(Collectors.toList());
+    }
 
     @Override
-    List<CommentDto> getAllCommentsByAuthor(Long authorId, Integer from, Integer size) {
-
-    };
+    public List<CommentDto> getAllCommentsByAuthor(Long authorId, Integer from, Integer size) {
+        User author = findUserOrRaiseException(authorId);
+        Pageable p = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "published_date"));
+        return commentRepository.findAllCommentsByAuthorId(author.getId(), p).stream()
+                .map(CommentMapper::toDto)
+                .collect(Collectors.toList());
+    }
 
     private Comment findCommentOrRaiseException(Long commentId) {
         return commentRepository.findById(commentId)
