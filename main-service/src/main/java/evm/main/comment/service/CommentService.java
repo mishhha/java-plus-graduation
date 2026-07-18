@@ -14,11 +14,11 @@ public interface CommentService {
 
     void deleteAllCommentsByAuthor(Long authorId);
 
-    void deleteAllCommentByEvent(Long eventId);
+    void deleteAllCommentsByEvent(Long eventId);
 
     CommentDto updateComment(UpdateCommentDto dto);
 
-    CommentDto getComment(Long commentId);
+    CommentDto getCommentById(Long commentId);
 
     List<CommentDto> getAllCommentsByEvent(Long eventId, Integer from, Integer size);
 

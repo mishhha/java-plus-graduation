@@ -6,9 +6,11 @@ import evm.main.comment.dto.UpdateCommentDto;
 import evm.main.comment.mappper.CommentMapper;
 import evm.main.comment.model.Comment;
 import evm.main.comment.repository.CommentRepository;
+import evm.main.event.mapper.EventMapper;
 import evm.main.event.model.Event;
 import evm.main.event.repository.EventRepository;
 import evm.main.exceptions.NotFoundException;
+import evm.main.users.mapper.UserMapper;
 import evm.main.users.model.User;
 import evm.main.users.repository.UserRepositoryJpa;
 import lombok.AllArgsConstructor;
@@ -34,15 +36,28 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentDto createComment(NewCommentDto dto) {
-        Event event = findEventOrRaiseException(dto.getEvent().getId());
-        User author = findUserOrRaiseException(dto.getAuthor().getId());
-        Comment c = CommentMapper.toEntity(dto, dto.getAuthor(), dto.getEvent());
+        Event event = findEventOrRaiseException(dto.getEventId());
+        User author = findUserOrRaiseException(dto.getAuthorId());
+
+        // пока так, потом дописать методы вычисления значений из БД
+        Long eventViewsCnt = 0L;
+        Long eventConfirmedRequestsCnt = 0L;
+
+        Comment c = CommentMapper.toEntity(dto,
+                UserMapper.toShortDto(author),
+                EventMapper.toShortDto(event, eventViewsCnt, eventConfirmedRequestsCnt)
+                );
         Comment saved = commentRepository.save(c);
         return CommentMapper.toDto(saved);
     }
 
     @Override
     public void deleteCommentById(Long commentId) {
+        // по идее, здесь надо проверить, что текущий пользователь (от чьего имени пришел запрос на
+        // удаление коммента) совпадает с автором коммента (в ином случае - ConflictException).
+        // Однако, я не смог сообразить, как из текущего сеанса взять sessionUserId -- у нас же нет
+        // никакого специального контекста, в котором фиксировался бы текущий пользователь.
+        // Поэтому -- пока так.
         commentRepository.deleteById(findCommentOrRaiseException(commentId).getId());
     }
 
@@ -53,13 +68,18 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteAllCommentByEvent(Long eventId) {
+    public void deleteAllCommentsByEvent(Long eventId) {
         Event e = findEventOrRaiseException(eventId);
         commentRepository.deleteAllCommentsByEventId(e.getId());
     }
 
     @Override
     public CommentDto updateComment(UpdateCommentDto dto) {
+        // по идее, здесь надо проверить, что текущий пользователь (от чьего имени пришел запрос на
+        // правку коммента) совпадает с автором коммента (в ином случае - ConflictException).
+        // Однако, я не смог сообразить, как из текущего сеанса взять sessionUserId -- у нас же нет
+        // никакого специального контекста, в котором фиксировался бы текущий пользователь.
+        // Поэтому -- пока так.
         Comment c = findCommentOrRaiseException(dto.getId());
         c.setText(dto.getText());
         Comment saved = commentRepository.save(c);
@@ -67,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDto getComment(Long commentId) {
+    public CommentDto getCommentById(Long commentId) {
         Comment comment = findCommentOrRaiseException(commentId);
         return CommentMapper.toDto(comment);
     }
