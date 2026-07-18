@@ -9,7 +9,7 @@ public interface CommentService {
 
     CommentDto createComment(NewCommentDto dto);
 
-    void deleteComment(Long commentId);
+    void deleteCommentById(Long commentId);
 
     void deleteAllCommentsByAuthor(Long authorId);
 

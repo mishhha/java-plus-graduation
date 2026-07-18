@@ -1,10 +1,15 @@
 package evm.main.comment.service;
 
+import evm.main.category.model.Category;
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
 import evm.main.comment.mappper.CommentMapper;
+import evm.main.comment.model.Comment;
 import evm.main.comment.repository.CommentRepository;
+import evm.main.event.model.Event;
 import evm.main.event.repository.EventRepository;
+import evm.main.exceptions.NotFoundException;
+import evm.main.users.model.User;
 import evm.main.users.repository.UserRepositoryJpa;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +35,7 @@ public class CommentServiceImpl implements CommentService {
     };
 
     @Override
-    void deleteComment(Long commentId) {
+    void deleteCommentById(Long commentId) {
         //
     };
 
@@ -63,5 +68,20 @@ public class CommentServiceImpl implements CommentService {
     List<CommentDto> getAllCommentsByAuthor(Long authorId, Integer from, Integer size) {
 
     };
+
+    private Comment findCommentOrRaiseException(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Комментарий с id = " + commentId.toString() + " не найден!"));
+    }
+
+    private Event findEventOrRaiseException(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Событие с id = " + eventId.toString() + " не найдено!"));
+    }
+
+    private User findUserOrRaiseException(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Автор/пользователь с id = " + userId.toString() + " не найден!"));
+    }
 
 }
