@@ -1,22 +1,23 @@
 package evm.main.comment.mappper;
 
 import evm.main.comment.dto.CommentDto;
-import evm.main.comment.dto.NewCommentDto;
 import evm.main.comment.model.Comment;
 import evm.main.event.model.Event;
 import evm.main.users.model.User;
+
+import java.time.LocalDateTime;
 
 public class CommentMapper {
 
     private CommentMapper() {
     }
 
-    public static Comment toEntity(NewCommentDto dto, User user, Event event) {
+    public static Comment toEntity(String text, User author, Event event) {
         return Comment.builder()
-                .text(dto.getText())
-                .publishedDate(dto.getPublishedDate())
-                .author(user)
+                .text(text)
                 .event(event)
+                .author(author)
+                .publishedDate(LocalDateTime.now())
                 .build();
     }
 
@@ -24,8 +25,10 @@ public class CommentMapper {
         return CommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
-                .author(comment.getAuthor())
-                .event(comment.getEvent())
+                .eventId(comment.getEvent().getId())
+                .authorId(comment.getAuthor().getId())
+                .publishedDate(comment.getPublishedDate())
+                .editedOn(comment.getEditedOn())
                 .build();
     }
 }
