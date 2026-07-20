@@ -4,28 +4,31 @@ import evm.main.comment.dto.CommentDto;
 import evm.main.comment.service.CommentService;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@AllArgsConstructor
-
+@RequestMapping("/events/{eventId}/comments")
+@RequiredArgsConstructor
+@Validated
 public class PublicCommentController {
 
-    public final CommentService commentService;
+    private final CommentService commentService;
 
     // то, что можно всем пользователям
 
-    @GetMapping("/comments/{commentId}")
+    @GetMapping("/{commentId}")
     @ResponseStatus(HttpStatus.OK)
-    public CommentDto getCommentById(@PathVariable Long commentId) {
-        return commentService.getCommentById(commentId);
+    public CommentDto getComment(@PathVariable Long eventId,
+                                 @PathVariable Long commentId) {
+        return commentService.getComment(eventId, commentId);
     }
 
-    @GetMapping("/comments/byEvent/{eventId}")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<CommentDto> getAllCommentsByEvent(
             @PathVariable Long eventId,
@@ -33,7 +36,4 @@ public class PublicCommentController {
             @RequestParam(value = "size", defaultValue = "10") @Positive Integer size) {
         return commentService.getAllCommentsByEvent(eventId, from, size);
     }
-
-
-
 }

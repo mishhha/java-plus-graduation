@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("Пользователь с id " + userId + " не найден.");
         }
 
-        commentRepository.deleteAllCommentsByAuthorId(userId);
+        commentRepository.deleteAllByAuthorId(userId);
         userRepositoryJpa.deleteById(userId);
     }
 
