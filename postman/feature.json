@@ -14417,8 +14417,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", eventId4Comment);\r",
@@ -14587,8 +14587,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", eventId4Comment);\r",
@@ -14681,6 +14681,180 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Получить комментарий по id Copy 2",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "        const user = await api.addUser(rnd.getUser());\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        console.log(\" event.id  сразу после создания = \" + event.id);\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "        let eventId4Comment = event.id;\r",
+                      "        \r",
+                      "        console.log(\" >>> перед публикацией события\");\r",
+                      "        //event = await api.publishEvent(event.id);\r",
+                      "        //let eventId4Comment = event.id;//1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        console.log(\" event.id после публикации = \" + event.id);\r",
+                      "        console.log(\"  <<< поле публикации события\");\r",
+                      "        \r",
+                      "        //pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "\r",
+                      "        let comment = await api.addComment(user.id, /*event.id*/eventId4Comment, rnd.getComment());\r",
+                      "        pm.collectionVariables.set(\"featureCommentId\", comment.id);\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                      "    }\r",
+                      "\r",
+                      "    /*pm.request.body.update({\r",
+                      "        mode: 'raw',\r",
+                      "        raw: JSON.stringify(event),\r",
+                      "        options: { raw: { language: 'json' } }\r",
+                      "    });*/\r",
+                      "};\r",
+                      "\r",
+                      "const interval = setInterval(() => {}, 1000);\r",
+                      "\r",
+                      "setTimeout(async () => \r",
+                      "    {\r",
+                      "        try {\r",
+                      "            await main();\r",
+                      "        } catch (e) {\r",
+                      "            console.error(e);\r",
+                      "        } finally {\r",
+                      "            clearInterval(interval);\r",
+                      "        }\r",
+                      "    },  \r",
+                      "    100 \r",
+                      ");"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ожидается код ответа 200 и данные в формате json\", function () {\r",
+                      "    pm.response.to.have.status(200);  \r",
+                      "    pm.response.to.be.withBody;\r",
+                      "    pm.response.to.be.json;\r",
+                      "});\r",
+                      "\r",
+                      "const target = pm.response.json();\r",
+                      "\r",
+                      "pm.test(\"Комментарий должен содержать поля: id, text, publishedDate, editedOn, authorId, authorName, eventId\", function () {\r",
+                      "    pm.expect(target).to.contain.keys('id', 'text', 'publishedDate', 'editedOn', 'authorId', 'authorName', 'eventId');\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Данные в ответе должны быть непустыми\", function () {\r",
+                      "    pm.expect(target.id).to.not.be.null;\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{featureEventId}}/comments/{{featureCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{featureEventId}}",
+                    "comments",
+                    "{{featureCommentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "New Request",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"stateAction\": \"PUBLISH_EVENT\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://127.0.0.1:8080/admin/events/4",
+                  "protocol": "http",
+                  "host": [
+                    "127",
+                    "0",
+                    "0",
+                    "1"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "admin",
+                    "events",
+                    "4"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -14766,8 +14940,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId4Comment);\r",
@@ -15078,8 +15252,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId4Comment);\r",
@@ -15680,8 +15854,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId4Comment);\r",
@@ -15934,13 +16108,13 @@
           "    }",
           "",
           "    async publishParticipationRequest(eventId, userId, verbose=null) {",
-          "        return this.post('/users/' + userId + '/requests?eventId=' + eventId, null, \"Ошибка при добавлении нового запроса на участие в событии\", verbose);",
+          "        return this.patch('/users/' + userId + '/requests?eventId=' + eventId, null, \"Ошибка при добавлении нового запроса на участие в событии\", verbose);",
           "    }",
           "",
           "    async publishEvent(eventId, verbose=null) {",
-          "        return this.patch('/admin/events/' + eventId, {stateAction: \"PUBLISH_EVENT\"}, \"Ошибка при публикации события\", verbose);",
+          "        return this.patch('/admin/events/' + eventId, {\"stateAction\": \"PUBLISH_EVENT\"}, \"Ошибка при публикации события\", verbose);",
           "    }",
-          "    ",
+          "",
           "    async rejectEvent(eventId, verbose=null) {",
           "        return this.patch('/admin/events/' + eventId, {stateAction: \"REJECT_EVENT\"}, \"Ошибка при отмене события\", verbose);",
           "    }",
@@ -16208,8 +16382,7 @@
     },
     {
       "key": "featureUserId",
-      "value": "",
-      "type": "default"
+      "value": ""
     }
   ]
 }
