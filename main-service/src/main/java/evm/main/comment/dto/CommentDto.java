@@ -1,11 +1,6 @@
 package evm.main.comment.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import evm.main.event.model.Event;
-import evm.main.users.model.User;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,21 +14,20 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CommentDto {
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
-    @Size(min = 1, max = 4000)
-    @NotBlank
     private String text;
 
-    @NotNull
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedDate;
 
-    @NotNull
-    private User author;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime editedOn;
 
-    @NotNull
-    private Event event;
+    private Long authorId;
 
+    private String authorName;
+
+    private Long eventId;
 }
 

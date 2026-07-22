@@ -1,6 +1,5 @@
 package evm.main.comment.model;
 
-
 import evm.main.event.model.Event;
 import evm.main.users.model.User;
 import jakarta.persistence.*;
@@ -19,23 +18,25 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    Long id;
+    private Long id;
 
     @Column(nullable = false, length = 4000)
-    String text;
+    private String text;
 
     @Column(name = "published_date", nullable = false)
-    LocalDateTime publishedDate;
+    private LocalDateTime publishedDate;
+
+    @Column(name = "edited_on")
+    private LocalDateTime editedOn;
 
     @ToString.Exclude
-    @JoinColumn(name = "author_id")
+    @JoinColumn(name = "author_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    User author;
+    private User author;
 
     @ToString.Exclude
-    @JoinColumn(name = "event_id")
+    @JoinColumn(name = "event_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    Event event;
-
+    private Event event;
 
 }

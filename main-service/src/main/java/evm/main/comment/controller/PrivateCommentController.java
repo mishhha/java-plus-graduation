@@ -2,37 +2,44 @@ package evm.main.comment.controller;
 
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
-import evm.main.comment.dto.UpdateCommentDto;
 import evm.main.comment.service.CommentService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@AllArgsConstructor
+@RequestMapping("/users/{userId}")
+@RequiredArgsConstructor
+@Validated
 public class PrivateCommentController {
 
     private final CommentService commentService;
 
     // то, что можно только автору комментария
 
-    @PostMapping("/comments")
+    @PostMapping("/events/{eventId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentDto createComment(@Valid @RequestBody NewCommentDto newCommentDto) {
-        return commentService.createComment(newCommentDto);
+    public CommentDto createComment(@PathVariable Long userId,
+                                    @PathVariable Long eventId,
+                                    @Valid @RequestBody NewCommentDto newCommentDto) {
+        return commentService.createComment(userId, eventId, newCommentDto);
     }
 
     @DeleteMapping("/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteComment(@PathVariable Long commentId) {
-        commentService.deleteCommentById(commentId);
+    public void deleteComment(@PathVariable Long userId,
+                              @PathVariable Long commentId) {
+        commentService.deleteComment(userId, commentId);
     }
 
     @PatchMapping("/comments/{commentId}")
     @ResponseStatus(HttpStatus.OK)
-    public CommentDto updateComment(@Valid @RequestBody UpdateCommentDto updateCommentDto) {
-        return commentService.updateComment(updateCommentDto);
+    public CommentDto updateComment(@PathVariable Long userId,
+                                    @PathVariable Long commentId,
+                                    @Valid @RequestBody NewCommentDto newCommentDto) {
+        return commentService.updateComment(userId, commentId, newCommentDto);
     }
 
 }
