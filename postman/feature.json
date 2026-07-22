@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "2778dece-98cd-47c9-a138-d452603effcb",
+    "_postman_id": "9cf77125-d892-49df-a740-d3656325200a",
     "name": "Test Explore With Me - Feature",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "43597502",
-    "_collection_link": "https://go.postman.co/collection/43597502-2778dece-98cd-47c9-a138-d452603effcb?source=collection_link"
+    "_exporter_id": "52743233",
+    "_collection_link": "https://go.postman.co/collection/52743233-9cf77125-d892-49df-a740-d3656325200a?source=collection_link"
   },
   "item": [
     {
@@ -14855,6 +14855,168 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Несуществующий комментарий - 404",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Статус 404 для несуществующего комментария', () => {",
+                      " pm.response.to.have.status(404);",
+                      "});",
+                      "pm.test('Проверка сообщения об ошибке', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "\r",
+                      "        const user = await api.addUser(rnd.getUser());\r",
+                      "        pm.collectionVariables.set(\"userId\", user.id);\r",
+                      "\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        event = await api.publishEvent(event.id); \r",
+                      "        pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка подготовки данных:\", err);\r",
+                      "        throw err;\r",
+                      "    }\r",
+                      "};\r",
+                      "\r",
+                      "setTimeout(async () => {\r",
+                      "    try {\r",
+                      "        await main();\r",
+                      "    } catch (e) {\r",
+                      "        console.error(e);\r",
+                      "    }\r",
+                      "}, 100);\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{featureEventId}}/comments/{{featureCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{featureEventId}}",
+                    "comments",
+                    "{{featureCommentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Комментарий несуществующего события - 404",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Статус 404 для несуществующего события', () => {",
+                      " pm.response.to.have.status(404);",
+                      "});",
+                      "pm.test('Проверка сообщения об ошибке', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "\r",
+                      "        const user = await api.addUser(rnd.getUser());\r",
+                      "        pm.collectionVariables.set(\"userId\", user.id);\r",
+                      "\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        event = await api.publishEvent(event.id); \r",
+                      "        pm.collectionVariables.set(\"realEventId\", event.id);\r",
+                      "\r",
+                      "        const comment = await api.addComment(user.id, event.id, rnd.getComment());\r",
+                      "        pm.collectionVariables.set(\"commentId\", comment.id);\r",
+                      "\r",
+                      "        const fakeEventId = Number(event.id) + 9999;\r",
+                      "        pm.collectionVariables.set(\"fakeEventId\", fakeEventId.toString());\r",
+                      "\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка подготовки данных:\", err);\r",
+                      "        throw err;\r",
+                      "    }\r",
+                      "};\r",
+                      "\r",
+                      "setTimeout(async () => {\r",
+                      "    try {\r",
+                      "        await main();\r",
+                      "    } catch (e) {\r",
+                      "        console.error(e);\r",
+                      "    }\r",
+                      "}, 100);\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{fakeEventId}}/comments/{{featureCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{fakeEventId}}",
+                    "comments",
+                    "{{featureCommentId}}"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -15105,8 +15267,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId4Comment);\r",
@@ -15319,6 +15481,365 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Нельзя редактировать чужой комментарий - 409",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Редактирование чужого комментария запрещено — статус 409', () => {",
+                      " pm.response.to.have.status(409);",
+                      "});",
+                      "pm.test('Проверка сообщения об ошибке', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "\r",
+                      "        const owner = await api.addUser(rnd.getUser());\r",
+                      "        pm.collectionVariables.set(\"ownerId\", owner.id);\r",
+                      "\r",
+                      "        const initiator = await api.addUser(rnd.getUser());\r",
+                      "        \r",
+                      "        pm.collectionVariables.set(\"initiatorId\", initiator.id); \r",
+                      "\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(owner.id, rnd.getEvent(category.id));\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "\r",
+                      "        const comment = await api.addComment(owner.id, event.id, rnd.getComment());\r",
+                      "        \r",
+                      "        pm.collectionVariables.set(\"commentId\", comment.id);\r",
+                      "\r",
+                      "\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка подготовки данных:\", err);\r",
+                      "        throw err;\r",
+                      "    }\r",
+                      "};\r",
+                      "\r",
+                      "setTimeout(async () => {\r",
+                      "    try {\r",
+                      "        await main();\r",
+                      "    } catch (e) {\r",
+                      "        console.error(e);\r",
+                      "    }\r",
+                      "}, 100);\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n \"text\": \"Попытка редактирования чужого комментария\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{initiatorId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{initiatorId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Нельзя комментировать неопубликованное событие - 409",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Комментарий к неопубликованному событию запрещён — статус 409', () => {",
+                      " pm.response.to.have.status(409);",
+                      "});",
+                      "pm.test('Проверка сообщения об ошибке', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "\r",
+                      "        const user = await api.addUser(rnd.getUser());\r",
+                      "        pm.collectionVariables.set(\"userId\", user.id);\r",
+                      "\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "\r",
+                      "        const comment = await api.addComment(user.id, event.id, rnd.getComment());\r",
+                      "        \r",
+                      "        pm.collectionVariables.set(\"commentId\", comment.id);\r",
+                      "\r",
+                      "\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка подготовки данных:\", err);\r",
+                      "        throw err;\r",
+                      "    }\r",
+                      "};\r",
+                      "\r",
+                      "setTimeout(async () => {\r",
+                      "    try {\r",
+                      "        await main();\r",
+                      "    } catch (e) {\r",
+                      "        console.error(e);\r",
+                      "    }\r",
+                      "}, 100);\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n \"text\": \"Комментарий к несуществующему событию\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{userId}}/events/{{featureEventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}",
+                    "events",
+                    "{{featureEventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Нельзя добавить пустой комментарий - 400",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Пустой комментарий отклонён — статус 400', () => {",
+                      " pm.response.to.have.status(400);",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "\r",
+                      "        const user = await api.addUser(rnd.getUser());\r",
+                      "        pm.collectionVariables.set(\"userId\", user.id);\r",
+                      "\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        event = await api.publishEvent(event.id); \r",
+                      "        pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка подготовки данных:\", err);\r",
+                      "        throw err;\r",
+                      "    }\r",
+                      "};\r",
+                      "\r",
+                      "setTimeout(async () => {\r",
+                      "    try {\r",
+                      "        await main();\r",
+                      "    } catch (e) {\r",
+                      "        console.error(e);\r",
+                      "    }\r",
+                      "}, 100);\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{userId}}/events/{{featureEventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}",
+                    "events",
+                    "{{featureEventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Нельзя удалить чужой комментарий - 409",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Удаление чужого комментария запрещено — статус 409', () => {",
+                      " pm.response.to.have.status(409);",
+                      "});",
+                      "pm.test('Проверка сообщения об ошибке', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {\r",
+                      "    const api = new API(pm);\r",
+                      "    const rnd = new RandomUtils();\r",
+                      "\r",
+                      "    try {\r",
+                      "        console.clear();\r",
+                      "\r",
+                      "        const owner = await api.addUser(rnd.getUser());\r",
+                      "        pm.collectionVariables.set(\"ownerId\", owner.id);\r",
+                      "\r",
+                      "        const initiator = await api.addUser(rnd.getUser());\r",
+                      "        \r",
+                      "        pm.collectionVariables.set(\"initiatorId\", initiator.id); \r",
+                      "\r",
+                      "        const category = await api.addCategory(rnd.getCategory());\r",
+                      "        let event = await api.addEvent(owner.id, rnd.getEvent(category.id));\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", event.id);\r",
+                      "\r",
+                      "        const comment = await api.addComment(owner.id, event.id, rnd.getComment());\r",
+                      "        \r",
+                      "        pm.collectionVariables.set(\"commentId\", comment.id);\r",
+                      "\r",
+                      "\r",
+                      "    } catch(err) {\r",
+                      "        console.error(\"Ошибка подготовки данных:\", err);\r",
+                      "        throw err;\r",
+                      "    }\r",
+                      "};\r",
+                      "\r",
+                      "setTimeout(async () => {\r",
+                      "    try {\r",
+                      "        await main();\r",
+                      "    } catch (e) {\r",
+                      "        console.error(e);\r",
+                      "    }\r",
+                      "}, 100);\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{initiatorId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{initiatorId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -15418,21 +15939,35 @@
                       "        pm.collectionVariables.set(\"featureUserId\", user.id);\r",
                       "\r",
                       "        const category = await api.addCategory(rnd.getCategory());\r",
-                      "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        let event1 = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        let event2 = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "        let event3 = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+                      "\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event1 = await api.publishEvent(event1.id);\r",
+                      "        event2 = await api.publishEvent(event2.id);\r",
+                      "        event3 = await api.publishEvent(event3.id);\r",
+                      "\r",
+                      "        let eventId1Comment = event1.id;\r",
+                      "        let eventId2Comment = event2.id;\r",
+                      "        let eventId3Comment = event3.id;\r",
+                      "\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
-                      "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId4Comment);\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId1Comment);\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId2Comment);\r",
+                      "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId3Comment);\r",
+                      "        \r",
                       "        \r",
                       "        // по идее, тут надо несколько комментов к разным событиям. \r",
                       "        // пока - все комменты к одному событию\r",
-                      "        let comment0 = await api.addComment(user.id, eventId4Comment, rnd.getComment());\r",
-                      "        let comment1 = await api.addComment(user.id, eventId4Comment, rnd.getComment());\r",
-                      "        let comment2 = await api.addComment(user.id, eventId4Comment, rnd.getComment());\r",
-                      "        let comment3 = await api.addComment(user.id, eventId4Comment, rnd.getComment());\r",
+                      "        let comment0 = await api.addComment(user.id, eventId1Comment, rnd.getComment());\r",
+                      "        let comment1 = await api.addComment(user.id, eventId1Comment, rnd.getComment());\r",
+                      "        let comment2 = await api.addComment(user.id, eventId3Comment, rnd.getComment());\r",
+                      "        let comment3 = await api.addComment(user.id, eventId2Comment, rnd.getComment());\r",
+                      "        let comment5 = await api.addComment(user.id, eventId2Comment, rnd.getComment());\r",
+                      "        let comment6 = await api.addComment(user.id, eventId3Comment, rnd.getComment());\r",
                       "        \r",
                       "\r",
                       "    } catch(err) {\r",
@@ -15585,8 +16120,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "        \r",
                       "        pm.collectionVariables.set(\"featureEventId\", /*event.id*/eventId4Comment);\r",
@@ -15724,8 +16259,8 @@
                       "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
                       "        \r",
                       "        console.log(\" >>> перед публикацией события\");\r",
-                      "        //event = await api.publishEvent(event.id);\r",
-                      "        let eventId4Comment = 1; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
+                      "        event = await api.publishEvent(event.id);\r",
+                      "        let eventId4Comment = event.id; //ВРЕМЕННО! пока не разобрался с публикацией события!\r",
                       "        console.log(\"  <<< поле публикации события\");\r",
                       "\r",
                       "        let comment = await api.addComment(user.id, eventId4Comment, rnd.getComment());\r",
@@ -16382,6 +16917,38 @@
     },
     {
       "key": "featureUserId",
+      "value": ""
+    },
+    {
+      "key": "initiatorId",
+      "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
+    },
+    {
+      "key": "ownerId",
+      "value": ""
+    },
+    {
+      "key": "editorId",
+      "value": ""
+    },
+    {
+      "key": "authorId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "realEventId",
+      "value": ""
+    },
+    {
+      "key": "fakeEventId",
       "value": ""
     }
   ]
