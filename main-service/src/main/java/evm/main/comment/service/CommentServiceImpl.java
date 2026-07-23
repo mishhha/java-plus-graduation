@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 @AllArgsConstructor
 @Slf4j
 public class CommentServiceImpl implements CommentService {
@@ -34,6 +33,7 @@ public class CommentServiceImpl implements CommentService {
     private final EventRepository eventRepository;
 
     @Override
+    @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto dto) {
         User author = findUserOrRaiseException(userId);
         Event event = findEventOrRaiseException(eventId);
@@ -52,6 +52,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Long userId, Long commentId) {
         findUserOrRaiseException(userId);
         Comment comment = findCommentOrRaiseException(commentId);
@@ -72,6 +73,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteAllCommentsByAuthor(Long authorId) {
         findUserOrRaiseException(authorId);
         commentRepository.deleteAllByAuthorId(authorId);
@@ -79,6 +81,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteAllCommentsByEvent(Long eventId) {
         findEventOrRaiseException(eventId);
         commentRepository.deleteAllByEventId(eventId);
@@ -86,6 +89,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto updateComment(Long userId, Long commentId, NewCommentDto dto) {
         findUserOrRaiseException(userId);
         Comment c = findCommentOrRaiseException(commentId);
@@ -103,6 +107,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommentDto getComment(Long eventId, Long commentId) {
         findEventOrRaiseException(eventId);
         Comment comment = findCommentOrRaiseException(commentId);
@@ -114,6 +119,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CommentDto> getAllCommentsByEvent(Long eventId, Integer from, Integer size) {
         findEventOrRaiseException(eventId);
         Pageable p = PageRequest.of(from / size, size);
@@ -124,6 +130,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CommentDto> getAllCommentsByAuthor(Long authorId, Integer from, Integer size) {
         findUserOrRaiseException(authorId);
         Pageable p = PageRequest.of(from / size, size);

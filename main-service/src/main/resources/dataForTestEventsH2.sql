@@ -110,7 +110,7 @@ insert into comments (
 insert into comments (
   text, published_date, edited_on, author_id, event_id
 ) values (
-  'тестовый комментарий от юзера-1 к событию-3', current_timestamp, null, 1, 2
+  'тестовый комментарий от юзера-1 к событию-2', current_timestamp, null, 1, 2
 );
 
 insert into comments (
