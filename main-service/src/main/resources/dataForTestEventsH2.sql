@@ -1,6 +1,120 @@
-INSERT INTO categories (name) VALUES ('Концерты');
-INSERT INTO categories (name) VALUES ('Выставки');
-INSERT INTO categories (name) VALUES ('Спорт');
+insert into categories (name) values ('Концерты');
+insert into categories (name) values ('Выставки');
+insert into categories (name) values ('Спорт');
 
-INSERT INTO users (name, email) VALUES ('Иван Петров', 'ivan@mail.ru');
-INSERT INTO users (name, email) VALUES ('Мария Петрова', 'maria@mail.ru');
+insert into users (name, email) values ('Иван Петров', 'ivan@mail.ru');
+insert into users (name, email) values ('Мария Петрова', 'maria@mail.ru');
+
+insert into events (
+    annotation,
+    category_id,
+    description,
+    event_date,
+    initiator_id,
+    paid,
+    participant_limit,
+    request_moderation,
+    title,
+    state,
+    created_on
+) values (
+    'Тестовый футбольный матч - аннотация',
+    3,
+    'Тестовый футбольный матч - описание',
+    timestamp '2026-08-01 15:00:00',
+    1,
+    false,
+    20,
+    true,
+    'Тестовый футбольный матч - заголовок',
+    'PUBLISHED',
+    current_timestamp
+);
+
+insert into events (
+    annotation,
+    category_id,
+    description,
+    event_date,
+    initiator_id,
+    paid,
+    participant_limit,
+    request_moderation,
+    title,
+    state,
+    created_on
+) values (
+    'Тестовая выставка - заголовок',
+    2,
+    'Тестовая выставка - описание',
+    timestamp '2026-08-01 15:00:00',
+    2,
+    false,
+    20,
+    true,
+    'Тестовая выставка - заголовок',
+    'PENDING',
+    current_timestamp
+);
+
+insert into events (
+    annotation,
+    category_id,
+    description,
+    event_date,
+    initiator_id,
+    paid,
+    participant_limit,
+    request_moderation,
+    title,
+    state,
+    created_on
+) values (
+    'Тестовый концерт - заголовок',
+    1,
+    'Тестовый концерт - описание',
+    timestamp '2026-08-01 15:00:00',
+    2,
+    false,
+    20,
+    true,
+    'Тестовый концерт - заголовок',
+    'PENDING',
+    current_timestamp
+);
+
+insert into comments (
+  text, published_date, edited_on, author_id, event_id
+) values (
+  'тестовый комментарий от юзера-1 к событию-1', current_timestamp, null, 1, 1
+);
+
+insert into comments (
+  text, published_date, edited_on, author_id, event_id
+) values (
+  'тестовый комментарий от юзера-2 к событию-1', current_timestamp, null, 2, 1
+);
+
+insert into comments (
+  text, published_date, edited_on, author_id, event_id
+) values (
+  'тестовый комментарий от юзера-1 к событию-2', current_timestamp, null, 1, 2
+);
+
+insert into comments (
+  text, published_date, edited_on, author_id, event_id
+) values (
+  'тестовый комментарий от юзера-2 к событию-2', current_timestamp, null, 2, 2
+);
+
+insert into comments (
+  text, published_date, edited_on, author_id, event_id
+) values (
+  'тестовый комментарий от юзера-1 к событию-2', current_timestamp, null, 1, 2
+);
+
+insert into comments (
+  text, published_date, edited_on, author_id, event_id
+) values (
+  'тестовый комментарий от юзера-2 к событию-3', current_timestamp, null, 2, 2
+);

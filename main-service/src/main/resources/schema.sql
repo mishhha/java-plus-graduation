@@ -102,3 +102,13 @@ CREATE TABLE IF NOT EXISTS compilation_events (
 --END;
 --'
 --LANGUAGE PLPGSQL;
+
+-- Комментарии к событиям
+CREATE TABLE IF NOT EXISTS comments (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    text           VARCHAR(4000) NOT NULL,
+    published_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    edited_on      TIMESTAMP WITHOUT TIME ZONE,
+    author_id      BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    event_id       BIGINT NOT NULL REFERENCES events (id) ON DELETE CASCADE
+);

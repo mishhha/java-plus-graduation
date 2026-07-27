@@ -1,5 +1,6 @@
 package evm.main.users.service;
 
+import evm.main.comment.repository.CommentRepository;
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
 import evm.main.users.dto.NewRequestUserDto;
@@ -23,6 +24,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepositoryJpa userRepositoryJpa;
     private final UserMapper userMapper;
+    private final CommentRepository commentRepository;
 
     @Override
     @Transactional
@@ -73,6 +75,7 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("Пользователь с id " + userId + " не найден.");
         }
 
+        commentRepository.deleteAllByAuthorId(userId);
         userRepositoryJpa.deleteById(userId);
     }
 
