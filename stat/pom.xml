@@ -19,16 +19,19 @@
 
     <dependencyManagement>
         <dependencies>
+
             <dependency>
                 <groupId>ru.practicum</groupId>
                 <artifactId>stat-dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>ru.practicum</groupId>
                 <artifactId>stat-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 

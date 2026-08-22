@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: ewm-main-service
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
