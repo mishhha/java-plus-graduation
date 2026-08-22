@@ -15,4 +15,4 @@ spring:
       path: /h2-console
 
 stats-service:
-  id: ewm-stats-server
+  id: stats-server
