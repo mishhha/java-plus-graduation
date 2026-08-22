@@ -1,20 +1,7 @@
 services:
-  stats-server:
-    build: stat/stat-server
-    image: stat-server
-    ports:
-      - "9090:9090"
-    depends_on:
-      stats-db:
-        condition: service_healthy
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
-      - SPRING_DATASOURCE_USERNAME=stat
-      - SPRING_DATASOURCE_PASSWORD=stat
-
   stats-db:
     image: postgres:16.1
-    container_name: postgres-ewm-stat-db
+    container_name: postgres-ewm-stats-db
     ports:
       - "6541:5432"
     environment:
@@ -27,22 +14,9 @@ services:
       interval: 5s
       retries: 10
 
-  ewm-service:
-    build: main-service
-    image: ewm-service
-    ports:
-      - "8080:8080"
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
-      - SPRING_DATASOURCE_USERNAME=ewm
-      - SPRING_DATASOURCE_PASSWORD=ewm
-      - STATS_SERVER_URL=http://stats-server:9090
-
   ewm-db:
     image: postgres:16.1
+    container_name: postgres-ewm-main-db
     ports:
       - "6542:5432"
     environment:
@@ -54,3 +28,66 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
+
+  discovery-server:
+    build: infra/discovery-server
+    image: discovery-server
+    ports:
+      - "8761:8761"
+
+  config-server:
+    build: infra/config-server
+    image: config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - discovery-server
+
+  stats-server:
+    build: stat/stat-server
+    image: stats-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      stats-db:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://stats-db:5432/ewm-stats
+      - DB_DRIVER=org.postgresql.Driver
+      - POSTGRES_USER=stat
+      - POSTGRES_PASSWORD=stat
+      - JPA_DDL_AUTO=create
+      - SQL_INIT_MODE=never
+
+  ewm-service:
+    build: core/main-service
+    image: ewm-main-service
+    ports:
+      - "8081:8080"
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://ewm-db:5432/ewm
+      - DB_DRIVER=org.postgresql.Driver
+      - POSTGRES_USER=ewm
+      - POSTGRES_PASSWORD=ewm
+      - JPA_DDL_AUTO=create
+      - SQL_INIT_MODE=never
+
+  gateway-server:
+    build: infra/gateway-server
+    image: gateway-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - discovery-server
+      - config-server
+    environment:
+      - EUREKA_URI=http://discovery-server:8761/eureka/
