@@ -8,7 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+/**
+ * Контроллер для работы с комментариями текущего авторизованного пользователя.
+ * Содержит эндпоинты, доступные только владельцу комментария:
+ * создание, обновление, удаление собственных комментариев.
+ */
 @RestController
 @RequestMapping("/users/{userId}")
 @RequiredArgsConstructor
@@ -16,8 +20,6 @@ import org.springframework.web.bind.annotation.*;
 public class PrivateCommentController {
 
     private final CommentService commentService;
-
-    // то, что можно только автору комментария
 
     @PostMapping("/events/{eventId}/comments")
     @ResponseStatus(HttpStatus.CREATED)

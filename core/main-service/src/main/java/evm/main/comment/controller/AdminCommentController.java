@@ -29,21 +29,7 @@ public class AdminCommentController {
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10") @Positive Integer size) {
 
-        if (eventId != null && authorId != null) {
-            throw new IllegalArgumentException(
-                    "Можно указать только один параметр: eventId или authorId");
-        }
-
-        if (eventId != null) {
-            return commentService.getAllCommentsByEvent(eventId, from, size);
-        }
-
-        if (authorId != null) {
-            return commentService.getAllCommentsByAuthor(authorId, from, size);
-        }
-
-        throw new IllegalArgumentException(
-                "Необходимо указать параметр eventId или authorId");
+        return commentService.getAllCommentsFiltered(eventId, authorId, from, size);
     }
 
     @DeleteMapping("/{commentId}")
@@ -58,23 +44,7 @@ public class AdminCommentController {
             @RequestParam(required = false) Long eventId,
             @RequestParam(required = false) Long authorId) {
 
-        if (eventId != null && authorId != null) {
-            throw new IllegalArgumentException(
-                    "Можно указать только один параметр: eventId или authorId");
-        }
-
-        if (eventId != null) {
-            commentService.deleteAllCommentsByEvent(eventId);
-            return;
-        }
-
-        if (authorId != null) {
-            commentService.deleteAllCommentsByAuthor(authorId);
-            return;
-        }
-
-        throw new IllegalArgumentException(
-                "Необходимо указать параметр eventId или authorId");
+        commentService.deleteAllCommentsFiltered(eventId, authorId);
     }
 
 }

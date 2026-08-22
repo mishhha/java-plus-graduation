@@ -42,9 +42,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto createCompilation(NewCompilationDto dto) {
 
-        Set<Event> events = dto.getEvents() == null
-                ? new HashSet<>()
-                : new HashSet<>(eventRepository.findAllById(dto.getEvents()));
+        Set<Event> events = Optional.ofNullable(dto.getEvents())
+            .map(eventRepository::findAllById)
+            .map(HashSet::new)
+            .orElseGet(HashSet::new);
 
         Compilation compilation =
                 CompilationMapper.toEntity(dto, events);

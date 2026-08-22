@@ -25,4 +25,7 @@ public interface CommentService {
 
     List<CommentDto> getAllCommentsByAuthor(Long authorId, Integer from, Integer size);
 
+    List<CommentDto> getAllCommentsFiltered(Long eventId, Long authorId, Integer from, Integer size);
+
+    void deleteAllCommentsFiltered(Long eventId, Long authorId);
 }

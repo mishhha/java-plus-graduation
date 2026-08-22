@@ -2,7 +2,7 @@ spring:
   application:
     name: stats-server
   config:
-    import: "optional:configserver:"
+    import: "configserver:"
   cloud:
     config:
       discovery:

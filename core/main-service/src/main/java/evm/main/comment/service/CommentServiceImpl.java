@@ -33,6 +33,45 @@ public class CommentServiceImpl implements CommentService {
     private final EventRepository eventRepository;
 
     @Override
+    @Transactional(readOnly = true)
+    public List<CommentDto> getAllCommentsFiltered(Long eventId, Long authorId, Integer from, Integer size) {
+
+        if (eventId != null && authorId != null) {
+            throw new IllegalArgumentException("Можно указать только один параметр: eventId или authorId");
+        }
+
+        if (eventId != null) {
+            return getAllCommentsByEvent(eventId, from, size);
+        }
+
+        if (authorId != null) {
+            return getAllCommentsByAuthor(authorId, from, size);
+        }
+
+        throw new IllegalArgumentException("Необходимо указать параметр eventId или authorId");
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllCommentsFiltered(Long eventId, Long authorId) {
+        if (eventId != null && authorId != null) {
+            throw new IllegalArgumentException("Можно указать только один параметр: eventId или authorId");
+        }
+
+        if (eventId != null) {
+            deleteAllCommentsByEvent(eventId);
+            return;
+        }
+
+        if (authorId != null) {
+            deleteAllCommentsByAuthor(authorId);
+            return;
+        }
+
+        throw new IllegalArgumentException("Необходимо указать параметр eventId или authorId");
+    }
+
+    @Override
     @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto dto) {
         User author = findUserOrRaiseException(userId);
