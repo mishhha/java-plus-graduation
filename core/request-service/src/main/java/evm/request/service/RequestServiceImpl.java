@@ -1,14 +1,14 @@
-package evm.main.requests.service;
+package evm.request.service;
 
-import evm.event.model.Event;
-import evm.event.repository.EventRepository;
 import evm.common.exceptions.ConflictException;
 import evm.common.exceptions.NotFoundException;
-import evm.main.requests.dto.ParticipationRequestDto;
-import evm.main.requests.mapper.RequestMapper;
-import evm.main.requests.model.Request;
-import evm.main.requests.model.Status;
-import evm.main.requests.repository.RequestRepositoryJpa;
+import evm.request.dto.EventInfo;
+import evm.request.dto.ParticipationRequestDto;
+import evm.request.mapper.RequestMapper;
+import evm.request.model.Request;
+import evm.request.model.Status;
+import evm.request.port.EventLookupPort;
+import evm.request.repository.RequestRepositoryJpa;
 import evm.users.model.User;
 import evm.users.repository.UserRepositoryJpa;
 import lombok.AllArgsConstructor;
@@ -26,19 +26,16 @@ public class RequestServiceImpl implements RequestService {
 
     private final UserRepositoryJpa userRepository;
     private final RequestRepositoryJpa requestRepository;
-    private final EventRepository eventRepository;
+    private final EventLookupPort eventLookupPort;   // ← было EventRepository
     private final RequestMapper mapper;
 
     @Override
     public List<ParticipationRequestDto> findById(Long userId) {
-
-        boolean findUser = userRepository.existsById(userId);
-
-        if (!findUser) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
 
-        List<Request> requestsList = requestRepository.findAllByUserId(userId);
+        List<Request> requestsList = requestRepository.findAllByRequesterId(userId);
 
         if (requestsList.isEmpty()) {
             return Collections.emptyList();
@@ -47,22 +44,20 @@ public class RequestServiceImpl implements RequestService {
         return requestsList.stream()
             .map(mapper::toDto)
             .toList();
-
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto save(Long userId, Long eventId) {
-
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException(
                 "Пользователь с ID " + userId + " не найден"
             ));
 
-        Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new NotFoundException(
-                "Мероприятия с ID " + eventId + " не найдено"
-            ));
+        EventInfo event = eventLookupPort.findById(eventId);
+        if (event == null) {
+            throw new NotFoundException("Мероприятия с ID " + eventId + " не найдено");
+        }
 
         if (requestRepository.existsByEventIdAndRequesterId(eventId, userId)) {
             throw new ConflictException(
@@ -70,27 +65,27 @@ public class RequestServiceImpl implements RequestService {
             );
         }
 
-        if (event.getInitiator().getId().equals(userId)) {
+        if (event.getInitiatorId().equals(userId)) {
             throw new ConflictException(
                 "Инициатор события не может добавить запрос на участие в своём событии."
             );
         }
 
-        if (event.getPublishedOn() == null) {
+        if (!"PUBLISHED".equals(event.getState()) || event.getPublishedOn() == null) {
             throw new ConflictException(
                 "Нельзя участвовать в неопубликованном событии."
             );
         }
 
         Status status;
-        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-            // модерация выключена или лимит = 0 --> подтверждаем автоматически
+        if (!Boolean.TRUE.equals(event.getRequestModeration()) ||
+            event.getParticipantLimit() == null || event.getParticipantLimit() == 0) {
             status = Status.CONFIRMED;
         } else {
             status = Status.PENDING;
         }
 
-        if (status == Status.CONFIRMED && event.getParticipantLimit() > 0) {
+        if (status == Status.CONFIRMED && event.getParticipantLimit() != null && event.getParticipantLimit() > 0) {
             long confirmedCount = requestRepository.countByEventIdAndStatus(
                 eventId,
                 Status.CONFIRMED
@@ -103,20 +98,16 @@ public class RequestServiceImpl implements RequestService {
             }
         }
 
-        Request request = mapper.mapToRequest(user, event);
+        Request request = mapper.mapToRequest(user, eventId);   // ← eventId вместо event
         request.setStatus(status);
 
         return mapper.toDto(requestRepository.save(request));
-
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto cancel(Long userId, Long requestId) {
-
-        boolean findUser = userRepository.existsById(userId);
-
-        if (!findUser) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
 
@@ -138,5 +129,4 @@ public class RequestServiceImpl implements RequestService {
 
         return mapper.toDto(update);
     }
-
 }

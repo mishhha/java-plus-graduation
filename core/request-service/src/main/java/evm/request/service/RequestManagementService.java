@@ -1,14 +1,16 @@
-package evm.main.requests.service;
+package evm.request.service;
 
 import evm.common.exceptions.ConflictException;
 import evm.common.exceptions.NotFoundException;
-import evm.event.model.Event;
-import evm.event.repository.EventRepository;
-import evm.main.requests.dto.*;
-import evm.main.requests.mapper.RequestMapper;
-import evm.main.requests.model.Request;
-import evm.main.requests.model.Status;
-import evm.main.requests.repository.RequestRepositoryJpa;
+import evm.request.dto.EventInfo;
+import evm.request.dto.EventRequestStatusUpdateRequest;
+import evm.request.dto.EventRequestStatusUpdateResult;
+import evm.request.dto.ParticipationRequestDto;
+import evm.request.mapper.RequestMapper;
+import evm.request.model.Request;
+import evm.request.model.Status;
+import evm.request.port.EventLookupPort;
+import evm.request.repository.RequestRepositoryJpa;
 import evm.users.repository.UserRepositoryJpa;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,17 +23,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RequestManagementService {
 
-    private final EventRepository eventRepository;
+    private final EventLookupPort eventLookupPort;
     private final RequestRepositoryJpa requestRepository;
     private final RequestMapper mapper;
     private final UserRepositoryJpa userRepository;
 
-    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         checkUserExists(userId);
-        Event event = getEventOrThrow(eventId);
+        EventInfo event = getEventOrThrow(eventId);
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено");
         }
 
@@ -44,21 +45,18 @@ public class RequestManagementService {
     public EventRequestStatusUpdateResult changeRequestStatus(Long userId, Long eventId,
                                                               EventRequestStatusUpdateRequest dto) {
         checkUserExists(userId);
-        Event event = getEventOrThrow(eventId);
+        EventInfo event = getEventOrThrow(eventId);
 
-        // Проверка прав организатора
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено");
         }
 
         List<Long> requestedIds = dto.getRequestIds();
 
-        // Получаем заявки только для этого события
         List<Request> requests = requestRepository.findAllByIdInAndEventId(dto.getRequestIds(), eventId);
 
         if (requests.size() != requestedIds.size()) {
-            throw new IllegalArgumentException("Обнаружены ID заявок, не принадлежащих данному событию. " +
-                "Проверьте корректность переданных requestIds.");
+            throw new IllegalArgumentException("Обнаружены ID заявок, не принадлежащих данному событию.");
         }
 
         if (requests.isEmpty()) {
@@ -66,8 +64,8 @@ public class RequestManagementService {
         }
 
         // Если модерация отключена или лимит = 0 — подтверждение не требуется
-        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-            // Автоматически подтверждаем все заявки
+        if (!Boolean.TRUE.equals(event.getRequestModeration()) ||
+            event.getParticipantLimit() == null || event.getParticipantLimit() == 0) {
             requests.forEach(r -> r.setStatus(Status.CONFIRMED));
             requestRepository.saveAll(requests);
 
@@ -81,8 +79,8 @@ public class RequestManagementService {
 
         Long confirmed = requestRepository.countByEventIdAndStatus(eventId, Status.CONFIRMED);
 
-        // Лимит уже достигнут — нельзя подтверждать новые заявки
-        if (event.getParticipantLimit() > 0 && confirmed >= event.getParticipantLimit()) {
+        if (event.getParticipantLimit() != null && event.getParticipantLimit() > 0 &&
+            confirmed >= event.getParticipantLimit()) {
             throw new ConflictException("Лимит участников достигнут");
         }
 
@@ -101,7 +99,6 @@ public class RequestManagementService {
         List<Request> rejectedList = List.of();
 
         if (Status.CONFIRMED.equals(newStatus)) {
-            // Подтверждаем заявки пока не достигнем лимита
             long available = event.getParticipantLimit() - confirmed;
 
             confirmedList = requests.stream()
@@ -109,13 +106,11 @@ public class RequestManagementService {
                 .peek(r -> r.setStatus(Status.CONFIRMED))
                 .toList();
 
-            // Остальные автоматически отклоняем
             rejectedList = requests.stream()
                 .skip(available)
                 .peek(r -> r.setStatus(Status.REJECTED))
                 .collect(Collectors.toList());
 
-            // Если лимит исчерпан — отклоняем все ожидающие заявки на это событие
             if (confirmedList.size() == available) {
                 requestRepository.findAllByEventId(eventId).stream()
                     .filter(r -> Status.PENDING.equals(r.getStatus()))
@@ -140,16 +135,17 @@ public class RequestManagementService {
             .build();
     }
 
+    private EventInfo getEventOrThrow(Long eventId) {
+        EventInfo info = eventLookupPort.findById(eventId);
+        if (info == null) {
+            throw new NotFoundException("Событие с id=" + eventId + " не найдено");
+        }
+        return info;
+    }
+
     private void checkUserExists(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
     }
-
-    private Event getEventOrThrow(Long eventId) {
-        return eventRepository.findById(eventId)
-            .orElseThrow(() -> new NotFoundException("Событие с id=" + eventId + " не найдено"));
-    }
-
-
 }

@@ -1,6 +1,6 @@
-package evm.main.requests.service;
+package evm.request.service;
 
-import evm.main.requests.dto.ParticipationRequestDto;
+import evm.request.dto.ParticipationRequestDto;
 
 import java.util.List;
 

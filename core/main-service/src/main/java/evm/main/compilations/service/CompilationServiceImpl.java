@@ -11,7 +11,7 @@ import evm.event.mapper.EventMapper;
 import evm.event.model.Event;
 import evm.event.repository.EventRepository;
 import evm.common.exceptions.NotFoundException;
-import evm.main.requests.repository.RequestRepositoryJpa;
+import evm.request.repository.RequestRepositoryJpa;
 import evm.stat.client.StatsClient;
 import evm.stat.dto.ViewStatsDto;
 import lombok.RequiredArgsConstructor;

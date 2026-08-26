@@ -1,7 +1,7 @@
-package evm.main.requests.controller;
+package evm.request.controller;
 
-import evm.main.requests.dto.ParticipationRequestDto;
-import evm.main.requests.service.RequestService;
+import evm.request.dto.ParticipationRequestDto;
+import evm.request.service.RequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

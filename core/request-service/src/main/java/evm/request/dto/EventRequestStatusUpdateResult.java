@@ -1,4 +1,4 @@
-package evm.main.requests.dto;
+package evm.request.dto;
 
 import lombok.Builder;
 import lombok.Data;

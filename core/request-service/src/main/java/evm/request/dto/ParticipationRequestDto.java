@@ -1,4 +1,4 @@
-package evm.main.requests.dto;
+package evm.request.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

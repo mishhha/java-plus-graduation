@@ -1,4 +1,4 @@
-package evm.main.requests.model;
+package evm.request.model;
 
 public enum Status {
     CANCELED,
