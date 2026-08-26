@@ -1,6 +1,6 @@
 package evm.main.requests.mapper;
 
-import evm.main.event.model.Event;
+import evm.event.model.Event;
 import evm.main.requests.dto.ParticipationRequestDto;
 import evm.main.requests.model.Request;
 import evm.main.requests.model.Status;

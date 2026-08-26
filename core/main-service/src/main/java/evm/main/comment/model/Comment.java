@@ -1,6 +1,6 @@
 package evm.main.comment.model;
 
-import evm.main.event.model.Event;
+import evm.event.model.Event;
 import evm.users.model.User;
 import jakarta.persistence.*;
 import lombok.*;

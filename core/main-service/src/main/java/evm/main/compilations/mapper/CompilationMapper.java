@@ -3,8 +3,8 @@ package evm.main.compilations.mapper;
 import evm.main.compilations.dto.CompilationDto;
 import evm.main.compilations.dto.NewCompilationDto;
 import evm.main.compilations.model.Compilation;
-import evm.main.event.dto.EventShortDto;
-import evm.main.event.model.Event;
+import evm.event.dto.EventShortDto;
+import evm.event.model.Event;
 
 import java.util.List;
 import java.util.Set;

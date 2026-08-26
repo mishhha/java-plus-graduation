@@ -1,7 +1,7 @@
 package evm.main.requests.service;
 
-import evm.main.event.model.Event;
-import evm.main.event.repository.EventRepository;
+import evm.event.model.Event;
+import evm.event.repository.EventRepository;
 import evm.common.exceptions.ConflictException;
 import evm.common.exceptions.NotFoundException;
 import evm.main.requests.dto.ParticipationRequestDto;

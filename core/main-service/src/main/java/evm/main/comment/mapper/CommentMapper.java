@@ -3,7 +3,7 @@ package evm.main.comment.mapper;
 import evm.main.comment.dto.CommentDto;
 import evm.main.comment.dto.NewCommentDto;
 import evm.main.comment.model.Comment;
-import evm.main.event.model.Event;
+import evm.event.model.Event;
 import evm.users.model.User;
 
 public class CommentMapper {

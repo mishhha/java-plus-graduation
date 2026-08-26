@@ -1,6 +1,6 @@
 package evm.main.compilations.model;
 
-import evm.main.event.model.Event;
+import evm.event.model.Event;
 import jakarta.persistence.*;
 import lombok.*;
 
