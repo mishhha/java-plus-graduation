@@ -1,6 +1,6 @@
-package evm.main.comment.repository;
+package evm.comment.repository;
 
-import evm.main.comment.model.Comment;
+import evm.comment.model.Comment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

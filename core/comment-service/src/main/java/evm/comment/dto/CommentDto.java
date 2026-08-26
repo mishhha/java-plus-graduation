@@ -1,4 +1,4 @@
-package evm.main.comment.dto;
+package evm.comment.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

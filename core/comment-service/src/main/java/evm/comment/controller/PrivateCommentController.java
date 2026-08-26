@@ -1,8 +1,8 @@
-package evm.main.comment.controller;
+package evm.comment.controller;
 
-import evm.main.comment.dto.CommentDto;
-import evm.main.comment.dto.NewCommentDto;
-import evm.main.comment.service.CommentService;
+import evm.comment.dto.CommentDto;
+import evm.comment.dto.NewCommentDto;
+import evm.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

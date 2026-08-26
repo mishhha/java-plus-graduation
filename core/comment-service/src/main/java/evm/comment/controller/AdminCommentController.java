@@ -1,7 +1,7 @@
-package evm.main.comment.controller;
+package evm.comment.controller;
 
-import evm.main.comment.dto.CommentDto;
-import evm.main.comment.service.CommentService;
+import evm.comment.dto.CommentDto;
+import evm.comment.service.CommentService;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;

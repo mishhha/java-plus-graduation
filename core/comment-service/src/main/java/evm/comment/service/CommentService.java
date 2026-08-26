@@ -1,7 +1,7 @@
-package evm.main.comment.service;
+package evm.comment.service;
 
-import evm.main.comment.dto.CommentDto;
-import evm.main.comment.dto.NewCommentDto;
+import evm.comment.dto.CommentDto;
+import evm.comment.dto.NewCommentDto;
 
 import java.util.List;
 
