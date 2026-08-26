@@ -3,7 +3,7 @@ package evm.main.event.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import evm.main.category.dto.CategoryDto;
 import evm.main.event.model.EventState;
-import evm.main.users.dto.UserShortDto;
+import evm.users.dto.UserShortDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

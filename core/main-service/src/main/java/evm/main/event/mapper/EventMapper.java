@@ -8,8 +8,8 @@ import evm.main.event.dto.EventShortDto;
 import evm.main.event.dto.NewEventDto;
 import evm.main.event.model.Event;
 import evm.main.event.model.EventState;
-import evm.main.users.mapper.UserMapper;
-import evm.main.users.model.User;
+import evm.users.mapper.UserMapper;
+import evm.users.model.User;
 
 import java.time.LocalDateTime;
 

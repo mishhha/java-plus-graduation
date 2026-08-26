@@ -1,7 +1,7 @@
 package evm.main.event.model;
 
 import evm.main.category.model.Category;
-import evm.main.users.model.User;
+import evm.users.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -10,7 +10,7 @@ import evm.main.event.model.EventState;
 import evm.main.event.repository.EventRepository;
 import evm.main.exceptions.ConflictException;
 import evm.main.exceptions.NotFoundException;
-import evm.main.users.model.User;
+import evm.users.model.User;
 import evm.main.users.repository.UserRepositoryJpa;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

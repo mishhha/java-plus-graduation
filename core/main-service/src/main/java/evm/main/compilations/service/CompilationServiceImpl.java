@@ -10,7 +10,7 @@ import evm.main.event.dto.EventShortDto;
 import evm.main.event.mapper.EventMapper;
 import evm.main.event.model.Event;
 import evm.main.event.repository.EventRepository;
-import evm.main.exceptions.NotFoundException;
+import evm.common.exceptions.NotFoundException;
 import evm.main.requests.repository.RequestRepositoryJpa;
 import evm.stat.client.StatsClient;
 import evm.stat.dto.ViewStatsDto;

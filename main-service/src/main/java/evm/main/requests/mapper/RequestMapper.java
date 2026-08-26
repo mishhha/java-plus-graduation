@@ -4,7 +4,7 @@ import evm.main.event.model.Event;
 import evm.main.requests.dto.ParticipationRequestDto;
 import evm.main.requests.model.Request;
 import evm.main.requests.model.Status;
-import evm.main.users.model.User;
+import evm.users.model.User;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

@@ -1,7 +1,7 @@
 package evm.main.requests.model;
 
 import evm.main.event.model.Event;
-import evm.main.users.model.User;
+import evm.users.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
