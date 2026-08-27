@@ -1,9 +1,9 @@
-package evm.main.compilations.controller;
+package evm.compilation.controller;
 
-import evm.main.compilations.dto.CompilationDto;
-import evm.main.compilations.dto.NewCompilationDto;
-import evm.main.compilations.dto.UpdateCompilationRequest;
-import evm.main.compilations.service.CompilationService;
+import evm.compilation.dto.CompilationDto;
+import evm.compilation.dto.NewCompilationDto;
+import evm.compilation.dto.UpdateCompilationRequest;
+import evm.compilation.service.CompilationService;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;

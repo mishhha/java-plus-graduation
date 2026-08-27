@@ -1,8 +1,8 @@
-package evm.main.compilations.service;
+package evm.compilation.service;
 
-import evm.main.compilations.dto.CompilationDto;
-import evm.main.compilations.dto.NewCompilationDto;
-import evm.main.compilations.dto.UpdateCompilationRequest;
+import evm.compilation.dto.CompilationDto;
+import evm.compilation.dto.NewCompilationDto;
+import evm.compilation.dto.UpdateCompilationRequest;
 
 import java.util.List;
 

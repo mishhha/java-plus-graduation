@@ -1,6 +1,6 @@
-package evm.main.compilations.repository;
+package evm.compilation.repository;
 
-import evm.main.compilations.model.Compilation;
+import evm.compilation.model.Compilation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 

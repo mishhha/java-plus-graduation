@@ -1,4 +1,4 @@
-package evm.main.compilations.dto;
+package evm.compilation.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

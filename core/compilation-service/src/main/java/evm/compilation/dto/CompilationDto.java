@@ -1,6 +1,6 @@
-package evm.main.compilations.dto;
+package evm.compilation.dto;
 
-import jakarta.validation.constraints.Size;
+import evm.event.dto.EventShortDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,12 +12,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateCompilationRequest {
-
-    private List<Long> events;
-
+public class CompilationDto {
+    private Long id;
     private Boolean pinned;
-
-    @Size(min = 1, max = 50)
     private String title;
+    private List<EventShortDto> events;
 }

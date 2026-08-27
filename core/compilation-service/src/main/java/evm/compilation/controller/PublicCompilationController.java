@@ -1,7 +1,7 @@
-package evm.main.compilations.controller;
+package evm.compilation.controller;
 
-import evm.main.compilations.dto.CompilationDto;
-import evm.main.compilations.service.CompilationService;
+import evm.compilation.dto.CompilationDto;
+import evm.compilation.service.CompilationService;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
