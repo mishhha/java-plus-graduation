@@ -135,7 +135,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public List<CommentDto> getAllCommentsByEvent(Long eventId, Integer from, Integer size) {
         Pageable p = PageRequest.of(from / size, size);
-        return commentRepository.findAllByEventIdOrderByPublishedDateDesc(eventId, p)
+        return commentRepository.findAllByEventIdOrderByCreatedDesc(eventId, p)
             .stream()
             .map(mapper::toDto)
             .collect(Collectors.toList());
@@ -146,7 +146,7 @@ public class CommentServiceImpl implements CommentService {
     public List<CommentDto> getAllCommentsByAuthor(Long authorId, Integer from, Integer size) {
         findUserOrRaiseException(authorId);
         Pageable p = PageRequest.of(from / size, size);
-        return commentRepository.findAllByAuthorIdOrderByPublishedDateDesc(authorId, p)
+        return commentRepository.findAllByAuthorIdOrderByCreatedDesc(authorId, p)
             .stream()
             .map(mapper::toDto)
             .collect(Collectors.toList());

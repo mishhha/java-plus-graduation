@@ -1,12 +1,14 @@
 package evm.compilation.port;
 
+import evm.event.dto.EventShortDto;
+
 import java.util.List;
 
 /**
- * Порт для получения событий по их ID.
- * Реализация находится в event-service.
+ * Порт получения событий по ID.
+ * Реализация находится в main-service (адаптер над EventRepository).
  */
 public interface EventLookupPort {
 
-    List<Object> findByIds(List<Long> eventIds);
+    List<EventShortDto> findByIds(List<Long> eventIds);
 }

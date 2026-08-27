@@ -11,10 +11,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     //@EntityGraph подгружает author одним запросом, вместо N отдельных запросов каждого комментария
     @EntityGraph(attributePaths = "author")
-    List<Comment> findAllByEventIdOrderByPublishedDateDesc(Long eventId, Pageable pageable);
+    List<Comment> findAllByEventIdOrderByCreatedDesc(Long eventId, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    List<Comment> findAllByAuthorIdOrderByPublishedDateDesc(Long authorId, Pageable pageable);
+    List<Comment> findAllByAuthorIdOrderByCreatedDesc(Long authorId, Pageable pageable);
 
     void deleteAllByAuthorId(Long authorId);
 

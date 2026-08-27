@@ -13,7 +13,6 @@ public class EventLookupAdapter implements EventLookupPort {
 
     private final EventRepository eventRepository;
 
-    @Override
     public EventInfo findById(Long eventId) {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event == null) return null;

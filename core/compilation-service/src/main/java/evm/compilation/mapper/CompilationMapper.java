@@ -8,22 +8,16 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class CompilationMapper {
 
-    @SuppressWarnings("unchecked")
-    public CompilationDto toDto(Compilation compilation, List<Object> events) {
-        List<EventShortDto> eventDtos = events.stream()
-            .map(e -> (EventShortDto) e)
-            .collect(Collectors.toList());
-
+    public CompilationDto toDto(Compilation compilation, List<EventShortDto> events) {
         return CompilationDto.builder()
             .id(compilation.getId())
             .title(compilation.getTitle())
             .pinned(compilation.getPinned())
-            .events(eventDtos)
+            .events(events)
             .build();
     }
 

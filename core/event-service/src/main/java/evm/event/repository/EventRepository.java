@@ -21,4 +21,5 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
 
     // Проверка — есть ли события в категории (перед удалением категории)
     boolean existsByCategoryId(Long categoryId);
+
 }

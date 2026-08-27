@@ -8,6 +8,7 @@ import evm.compilation.model.Compilation;
 import evm.compilation.port.EventLookupPort;
 import evm.compilation.repository.CompilationRepository;
 import evm.common.exceptions.NotFoundException;
+import evm.event.dto.EventShortDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto createCompilation(NewCompilationDto dto) {
         Compilation c = mapper.toEntity(dto);
         Compilation saved = compilationRepository.save(c);
-        List<Object> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
+        List<EventShortDto> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
         return mapper.toDto(saved, events);
     }
 
@@ -59,7 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         Compilation saved = compilationRepository.save(c);
-        List<Object> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
+        List<EventShortDto> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
         return mapper.toDto(saved, events);
     }
 
@@ -77,7 +78,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         return compilations.stream()
             .map(c -> {
-                List<Object> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
+                List<EventShortDto> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
                 return mapper.toDto(c, events);
             })
             .collect(Collectors.toList());
@@ -87,7 +88,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto getCompilation(Long compId) {
         Compilation c = findOrThrow(compId);
-        List<Object> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
+        List<EventShortDto> events = eventLookupPort.findByIds(new ArrayList<>(c.getEventIds()));
         return mapper.toDto(c, events);
     }
 
