@@ -15,6 +15,9 @@ spring:
             - classpath:/config-repo/main-service/
             - classpath:/config-repo/stats-server/
             - classpath:/config-repo/gateway-server/
+            - classpath:/config-repo/event-service/
+            - classpath:/config-repo/request-service/
+            - classpath:/config-repo/user-service/
 
 management:
   endpoints:

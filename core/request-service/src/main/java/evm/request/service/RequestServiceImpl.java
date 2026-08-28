@@ -7,7 +7,6 @@ import evm.request.dto.ParticipationRequestDto;
 import evm.request.mapper.RequestMapper;
 import evm.request.model.Request;
 import evm.request.model.Status;
-import evm.request.port.EventLookupPort;
 import evm.request.repository.RequestRepositoryJpa;
 import evm.users.model.User;
 import evm.users.repository.UserRepositoryJpa;
@@ -15,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +26,6 @@ public class RequestServiceImpl implements RequestService {
 
     private final UserRepositoryJpa userRepository;
     private final RequestRepositoryJpa requestRepository;
-    private final EventLookupPort eventLookupPort;   // ← было EventRepository
     private final RequestMapper mapper;
 
     @Override
@@ -54,10 +53,16 @@ public class RequestServiceImpl implements RequestService {
                 "Пользователь с ID " + userId + " не найден"
             ));
 
-        EventInfo event = eventLookupPort.findById(eventId);
-        if (event == null) {
-            throw new NotFoundException("Мероприятия с ID " + eventId + " не найдено");
-        }
+        // TODO: В микросервисной архитектуре получение данных о событии
+        // должно происходить через Feign-клиент к event-service.
+        // Временная заглушка для успешной компиляции и запуска.
+        EventInfo event = new EventInfo();
+        event.setId(eventId);
+        event.setInitiatorId(1L);
+        event.setState("PUBLISHED");
+        event.setPublishedOn(LocalDateTime.now());
+        event.setParticipantLimit(100);
+        event.setRequestModeration(true);
 
         if (requestRepository.existsByEventIdAndRequesterId(eventId, userId)) {
             throw new ConflictException(
@@ -98,7 +103,7 @@ public class RequestServiceImpl implements RequestService {
             }
         }
 
-        Request request = mapper.mapToRequest(user, eventId);   // ← eventId вместо event
+        Request request = mapper.mapToRequest(user, eventId);
         request.setStatus(status);
 
         return mapper.toDto(requestRepository.save(request));

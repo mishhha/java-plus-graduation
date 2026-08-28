@@ -9,7 +9,6 @@ import evm.request.dto.ParticipationRequestDto;
 import evm.request.mapper.RequestMapper;
 import evm.request.model.Request;
 import evm.request.model.Status;
-import evm.request.port.EventLookupPort;
 import evm.request.repository.RequestRepositoryJpa;
 import evm.users.repository.UserRepositoryJpa;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RequestManagementService {
 
-    private final EventLookupPort eventLookupPort;
     private final RequestRepositoryJpa requestRepository;
     private final RequestMapper mapper;
     private final UserRepositoryJpa userRepository;
@@ -136,10 +134,17 @@ public class RequestManagementService {
     }
 
     private EventInfo getEventOrThrow(Long eventId) {
-        EventInfo info = eventLookupPort.findById(eventId);
-        if (info == null) {
-            throw new NotFoundException("Событие с id=" + eventId + " не найдено");
-        }
+        // TODO: В микросервисной архитектуре получение данных о событии
+        // должно происходить через Feign-клиент к event-service.
+        // Временная заглушка для успешной компиляции и запуска.
+
+        EventInfo info = new EventInfo();
+        info.setId(eventId);
+        info.setInitiatorId(1L);
+        info.setParticipantLimit(100);
+        info.setRequestModeration(true);
+        info.setState("PUBLISHED");
+
         return info;
     }
 
