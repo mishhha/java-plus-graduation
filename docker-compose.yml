@@ -100,6 +100,22 @@ services:
       - SPRING_DATASOURCE_USERNAME=ewm
       - SPRING_DATASOURCE_PASSWORD=ewm
 
+  event-service:
+    build: core/event-service
+    image: event-service
+    container_name: event-service
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      ewm-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
+      - SPRING_DATASOURCE_USERNAME=ewm
+      - SPRING_DATASOURCE_PASSWORD=ewm
+
   gateway-server:
     build: infra/gateway-server
     image: gateway-server

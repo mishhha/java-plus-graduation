@@ -3,34 +3,48 @@ server:
 
 spring:
   cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config-repo
+  profiles:
+    active: native
+
+---
+# Далее идут сами маршруты (если они в этом же файле)
+# ИЛИ найдите файл gateway-server.yaml в этой папке и обновите его:
+spring:
+  cloud:
     gateway:
       routes:
-
+        - id: ewm-event-service-user-events
+          uri: lb://event-service
+          predicates:
+            - Path=/users/*/events/**
         - id: ewm-user-service-admin
           uri: lb://user-service
           predicates:
             - Path=/admin/users/**
-
+        - id: ewm-event-service-admin
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/events/**
         - id: ewm-user-service-public
           uri: lb://user-service
           predicates:
             - Path=/users/**
-
+        - id: ewm-event-service-public
+          uri: lb://event-service
+          predicates:
+            - Path=/events/**
         - id: ewm-main-service-admin
           uri: lb://main-service
           predicates:
             - Path=/admin/**
-
-        - id: ewm-main-service-events
-          uri: lb://main-service
-          predicates:
-            - Path=/events/**
-
         - id: ewm-main-service-categories
           uri: lb://main-service
           predicates:
             - Path=/categories/**
-
         - id: ewm-main-service-compilations
           uri: lb://main-service
           predicates:

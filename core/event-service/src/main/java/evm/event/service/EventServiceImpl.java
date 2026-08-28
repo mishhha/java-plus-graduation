@@ -1,6 +1,5 @@
 package evm.event.service;
 
-import evm.event.port.RequestStatsPort;
 import evm.category.model.Category;
 import evm.category.repository.CategoryRepository;
 import evm.event.dto.*;
@@ -45,7 +44,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepositoryJpa userRepository;
     private final CategoryRepository categoryRepository;
-    private final RequestStatsPort requestStatsPort;
+
     private final StatsClient statsClient;
 
 // =========================================================================
@@ -118,7 +117,7 @@ public class EventServiceImpl implements EventService {
         sendHit(request);
 
         Long views = getViews(event);
-        Long confirmed = requestStatsPort.countConfirmed(id);
+        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
 
         return EventMapper.toFullDto(event, views, confirmed);
     }
@@ -172,7 +171,7 @@ public class EventServiceImpl implements EventService {
         }
 
         Long views = getViews(event);
-        Long confirmed = requestStatsPort.countConfirmed(eventId);
+        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
 
         return EventMapper.toFullDto(event, views, confirmed);
     }
@@ -198,7 +197,7 @@ public class EventServiceImpl implements EventService {
         applyUserUpdates(event, dto);
 
         Event saved = eventRepository.save(event);
-        Long confirmed = requestStatsPort.countConfirmed(eventId);
+        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
 
         return EventMapper.toFullDto(saved, getViews(saved), confirmed);
     }
@@ -240,7 +239,7 @@ public class EventServiceImpl implements EventService {
         applyAdminUpdates(event, dto);
 
         Event saved = eventRepository.save(event);
-        Long confirmed = requestStatsPort.countConfirmed(eventId);
+        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
 
         return EventMapper.toFullDto(saved, getViews(saved), confirmed);
     }
@@ -298,8 +297,11 @@ public class EventServiceImpl implements EventService {
     // Возвращает Map: eventId → количество заявок
     private Map<Long, Long> getConfirmedRequestsMap(List<Event> events) {
         if (events.isEmpty()) return Map.of();
-        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
-        return requestStatsPort.countConfirmedByEventIds(eventIds);
+
+        // TODO: В микросервисной архитектуре получение подтвержденных заявок
+        // должно происходить через request-service (Feign) или локальный RequestRepository,
+        // если он будет перенесен в этот сервис.
+        return events.stream().collect(Collectors.toMap(Event::getId, e -> 0L));
     }
 
     // Применяет изменения из запроса пользователя к событию

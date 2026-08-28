@@ -1,6 +1,5 @@
-package evm.main;
+package evm.event;
 
-import evm.event.EventServiceApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -14,17 +13,14 @@ import evm.users.UserServiceApplication;
     basePackages = "evm",
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
-        classes = {
-            UserServiceApplication.class,
-            EventServiceApplication.class
-        }
+        classes = {UserServiceApplication.class}
     )
 )
 @EntityScan(basePackages = "evm")
 @EnableJpaRepositories(basePackages = "evm")
-public class MainServiceApplication {
+public class EventServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(MainServiceApplication.class, args);
+        SpringApplication.run(EventServiceApplication.class, args);
     }
 }
