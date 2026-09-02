@@ -2,7 +2,6 @@ package evm.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import evm.category.dto.CategoryDto;
-import evm.users.dto.UserShortDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +28,14 @@ public class EventShortDto {
     private Boolean paid;
     private String title;
     private Long views;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserShortDto {
+        private Long id;
+        private String name;
+    }
+
 }

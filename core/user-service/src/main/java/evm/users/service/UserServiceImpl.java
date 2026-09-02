@@ -53,6 +53,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponseDto findById(Long userId) {
+        User user = userRepositoryJpa.findById(userId)
+            .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+        return userMapper.mapToUserResponseDto(user);
+    }
+
+    @Override
     public List<UserResponseDto> findUsersByParam(Integer from, Integer size) {
 
         Pageable pageable = PageRequest.of(from / size, size);

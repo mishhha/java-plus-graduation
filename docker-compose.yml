@@ -49,6 +49,11 @@ services:
     depends_on:
       discovery-server:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   stats-server:
     build: stat/stats-server
@@ -57,7 +62,7 @@ services:
       stats-db:
         condition: service_healthy
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       - DB_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - DB_DRIVER=org.postgresql.Driver
@@ -73,7 +78,7 @@ services:
       ewm-db:
         condition: service_healthy
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       - DB_URL=jdbc:postgresql://ewm-db:5432/ewm
       - DB_DRIVER=org.postgresql.Driver
@@ -92,13 +97,15 @@ services:
       discovery-server:
         condition: service_healthy
       config-server:
-        condition: service_started
+        condition: service_healthy
       ewm-db:
         condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
       - SPRING_DATASOURCE_USERNAME=ewm
       - SPRING_DATASOURCE_PASSWORD=ewm
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_SQL_INIT_MODE=never
 
   event-service:
     build: core/event-service
@@ -108,7 +115,7 @@ services:
       discovery-server:
         condition: service_healthy
       config-server:
-        condition: service_started
+        condition: service_healthy
       ewm-db:
         condition: service_healthy
     environment:
@@ -124,7 +131,7 @@ services:
       discovery-server:
         condition: service_healthy
       config-server:
-        condition: service_started
+        condition: service_healthy
       ewm-db:
         condition: service_healthy
     environment:
@@ -132,6 +139,42 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
       - SPRING_DATASOURCE_USERNAME=ewm
       - SPRING_DATASOURCE_PASSWORD=ewm
+
+  compilation-service:
+    build: core/compilation-service
+    image: compilation-service
+    container_name: compilation-service
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      ewm-db:
+        condition: service_healthy
+    environment:
+      - SPRING_APPLICATION_NAME=compilation-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
+      - SPRING_DATASOURCE_USERNAME=ewm
+      - SPRING_DATASOURCE_PASSWORD=ewm
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+  comment-service:
+    build: core/comment-service
+    image: comment-service
+    container_name: comment-service
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      ewm-db:
+        condition: service_healthy
+    environment:
+      - SPRING_APPLICATION_NAME=comment-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
+      - SPRING_DATASOURCE_USERNAME=ewm
+      - SPRING_DATASOURCE_PASSWORD=ewm
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
   gateway-server:
     build: infra/gateway-server
@@ -142,4 +185,4 @@ services:
       discovery-server:
         condition: service_healthy
       config-server:
-        condition: service_started
+        condition: service_healthy

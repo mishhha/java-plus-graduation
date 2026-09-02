@@ -1,4 +1,4 @@
-package evm.stat.client.config;
+package evm.stat.config;
 
 import evm.stat.client.StatsClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +20,10 @@ public class StatsClientConfig {
         RetryTemplate retryTemplate = new RetryTemplate();
 
         FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
-        backOffPolicy.setBackOffPeriod(3000L);
+        backOffPolicy.setBackOffPeriod(500L);
         retryTemplate.setBackOffPolicy(backOffPolicy);
 
-        RetryPolicy retryPolicy = new MaxAttemptsRetryPolicy(3);
+        RetryPolicy retryPolicy = new MaxAttemptsRetryPolicy(2);
         retryTemplate.setRetryPolicy(retryPolicy);
 
         return retryTemplate;
@@ -34,7 +34,7 @@ public class StatsClientConfig {
     public StatsClient statsClient(
         DiscoveryClient discoveryClient,
         RetryTemplate statsRetryTemplate,
-        @Value("${stats-service.id:ewm-stats-server}") String statsServiceId) {
+        @Value("${stats-service.id:stats-server}") String statsServiceId) {
         return new StatsClient(discoveryClient, statsRetryTemplate, statsServiceId);
     }
 }

@@ -31,7 +31,6 @@ public class UserMapper {
         return dto;
     }
 
-    // User → UserShortDto (краткий ответ — только id и имя)
     public static UserShortDto toShortDto(User user) {
         return UserShortDto.builder()
                 .id(user.getId())

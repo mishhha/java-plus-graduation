@@ -32,6 +32,12 @@ public class UserController {
         return userService.findUsersByIds(Arrays.asList(ids));
     }
 
+    @GetMapping("/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto findById(@PathVariable Long userId) {
+        return userService.findById(userId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto save(

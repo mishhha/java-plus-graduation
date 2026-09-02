@@ -2,6 +2,8 @@ package evm.event.service;
 
 import evm.category.model.Category;
 import evm.category.repository.CategoryRepository;
+import evm.event.client.RequestClient;
+import evm.event.client.UserClient;
 import evm.event.dto.*;
 import evm.event.mapper.EventMapper;
 import evm.event.mapper.LocationMapper;
@@ -11,8 +13,6 @@ import evm.event.repository.EventRepository;
 import evm.event.repository.EventSpecification;
 import evm.common.exceptions.ConflictException;
 import evm.common.exceptions.NotFoundException;
-import evm.users.model.User;
-import evm.users.repository.UserRepositoryJpa;
 import evm.stat.client.StatsClient;
 import evm.stat.dto.HitDto;
 import evm.stat.dto.ViewStatsDto;
@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +43,9 @@ public class EventServiceImpl implements EventService {
     private static final int MIN_HOURS_BEFORE_EVENT_ADMIN = 1;
 
     private final EventRepository eventRepository;
-    private final UserRepositoryJpa userRepository;
     private final CategoryRepository categoryRepository;
-
+    private final UserClient userClient;
+    private final RequestClient requestClient;
     private final StatsClient statsClient;
 
 // =========================================================================
@@ -53,73 +54,98 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<EventShortDto> getEventsByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Event> events = eventRepository.findAllById(ids);
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Long> viewsMap = getViewsMap(events);
+        Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
+
+        List<Long> initiatorIds = events.stream().map(Event::getInitiatorId).distinct().collect(Collectors.toList());
+        Map<Long, String> userNamesMap = userClient.getUsersByIds(initiatorIds).stream()
+            .collect(Collectors.toMap(UserDto::getId, UserDto::getName));
+
+        return events.stream()
+            .map(e -> EventMapper.toShortDto(
+                e,
+                viewsMap.getOrDefault(e.getId(), 0L),
+                confirmedMap.getOrDefault(e.getId(), 0L),
+                userNamesMap.getOrDefault(e.getInitiatorId(), "Unknown")
+            ))
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getPublicEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                Boolean onlyAvailable, String sort,
                                                Integer from, Integer size,
                                                HttpServletRequest request) {
-        // Валидация диапазона дат
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart не может быть позже rangeEnd");
         }
 
         sendHit(request);
 
-        // Сортировка
-        Pageable pageable;
-        if ("EVENT_DATE".equals(sort)) {
-            pageable = PageRequest.of(from / size, size,
-                    Sort.by("eventDate").ascending());
-        } else {
-            pageable = PageRequest.of(from / size, size);
-        }
+        Pageable pageable = "EVENT_DATE".equals(sort)
+            ? PageRequest.of(from / size, size, Sort.by("eventDate").ascending())
+            : PageRequest.of(from / size, size);
 
-        Specification<Event> spec = EventSpecification.publicFilter(
-                text, categories, paid, rangeStart, rangeEnd);
-
+        Specification<Event> spec = EventSpecification.publicFilter(text, categories, paid, rangeStart, rangeEnd);
         List<Event> events = eventRepository.findAll(spec, pageable).getContent();
+
+        if (events.isEmpty()) return List.of();
+
         Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
 
-        // Фильтрация по доступности
         if (onlyAvailable != null && onlyAvailable) {
             events = events.stream()
-                    .filter(e -> e.getParticipantLimit() == 0 ||
-                            e.getParticipantLimit() > confirmedMap.getOrDefault(e.getId(), 0L))
-                    .collect(Collectors.toList());
+                .filter(e -> e.getParticipantLimit() == 0 ||
+                    e.getParticipantLimit() > confirmedMap.getOrDefault(e.getId(), 0L))
+                .collect(Collectors.toList());
         }
 
-        // Получаем статистику и количество заявок для всех событий разом
         Map<Long, Long> viewsMap = getViewsMap(events);
 
-        List<EventShortDto> result = events.stream()
-                .map(e -> EventMapper.toShortDto(
-                        e,
-                        viewsMap.getOrDefault(e.getId(), 0L),
-                        confirmedMap.getOrDefault(e.getId(), 0L)))
-                .collect(Collectors.toList());
+        List<Long> initiatorIds = events.stream().map(Event::getInitiatorId).distinct().collect(Collectors.toList());
 
-        // Сортировка по просмотрам если запрошена
+        Map<Long, String> userNamesMap = userClient.getUsersByIds(initiatorIds).stream()
+            .collect(Collectors.toMap(UserDto::getId, UserDto::getName));
+
+        List<EventShortDto> result = events.stream()
+            .map(e -> EventMapper.toShortDto(
+                e,
+                viewsMap.getOrDefault(e.getId(), 0L),
+                confirmedMap.getOrDefault(e.getId(), 0L),
+                userNamesMap.getOrDefault(e.getInitiatorId(), "Unknown") // 👈 БЕРЕМ ИМЯ ИЗ МАПЫ!
+            ))
+            .collect(Collectors.toList());
+
         if ("VIEWS".equals(sort)) {
             result.sort(Comparator.comparingLong(EventShortDto::getViews).reversed());
         }
-
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getPublicEventById(Long id, HttpServletRequest request) {
-        // Только опубликованные события доступны публично
         Event event = eventRepository.findByIdAndState(id, EventState.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
+            .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
 
-        // Фиксируем обращение в сервисе статистики
         sendHit(request);
-
         Long views = getViews(event);
-        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
+        Long confirmed = 0L;
 
-        return EventMapper.toFullDto(event, views, confirmed);
+        String userName = userClient.getUserById(event.getInitiatorId()).getName();
+        return EventMapper.toFullDto(event, views, confirmed, userName);
     }
 
 // =========================================================================
@@ -129,77 +155,72 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size) {
-        checkUserExists(userId);
         Pageable pageable = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
 
         Map<Long, Long> viewsMap = getViewsMap(events);
         Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
 
+        String userName = userClient.getUserById(userId).getName();
+
         return events.stream()
-                .map(e -> EventMapper.toShortDto(
-                        e,
-                        viewsMap.getOrDefault(e.getId(), 0L),
-                        confirmedMap.getOrDefault(e.getId(), 0L)))
-                .collect(Collectors.toList());
+            .map(e -> EventMapper.toShortDto(
+                e,
+                viewsMap.getOrDefault(e.getId(), 0L),
+                confirmedMap.getOrDefault(e.getId(), 0L),
+                userName
+            ))
+            .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public EventFullDto addEvent(Long userId, NewEventDto dto) {
-        // Проверяем что дата события не раньше чем через 2 часа
         validateEventDate(dto.getEventDate(), MIN_HOURS_BEFORE_EVENT_USER);
 
-        User user = getUserOrThrow(userId);
         Category category = getCategoryOrThrow(dto.getCategory());
-
-        Event event = EventMapper.toEntity(dto, category, user);
+        Event event = EventMapper.toEntity(dto, category, userId);
         Event saved = eventRepository.save(event);
 
-        return EventMapper.toFullDto(saved, 0L, 0L);
+        String userName = userClient.getUserById(userId).getName();
+        return EventMapper.toFullDto(saved, 0L, 0L, userName);
     }
 
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getUserEventById(Long userId, Long eventId) {
-        checkUserExists(userId);
         Event event = getEventOrThrow(eventId);
 
-        // Пользователь может видеть только своё событие
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено");
         }
 
         Long views = getViews(event);
-        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
+        Long confirmed = 0L;
 
-        return EventMapper.toFullDto(event, views, confirmed);
+        String userName = userClient.getUserById(event.getInitiatorId()).getName();
+        return EventMapper.toFullDto(event, views, confirmed, userName);
     }
 
     @Override
     @Transactional
-    public EventFullDto updateUserEvent(Long userId, Long eventId,
-                                        UpdateEventUserRequest dto) {
-        checkUserExists(userId);
+    public EventFullDto updateUserEvent(Long userId, Long eventId, UpdateEventUserRequest dto) {
         Event event = getEventOrThrow(eventId);
 
-        // Пользователь может редактировать только своё событие
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено");
         }
 
-        // Нельзя редактировать опубликованное событие
         if (EventState.PUBLISHED.equals(event.getState())) {
             throw new ConflictException("Изменять можно только события в статусе PENDING или CANCELED");
         }
 
-        // Применяем изменения — только те поля которые не null
         applyUserUpdates(event, dto);
-
         Event saved = eventRepository.save(event);
-        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
+        Long confirmed = 0L;
 
-        return EventMapper.toFullDto(saved, getViews(saved), confirmed);
+        String userName = userClient.getUserById(event.getInitiatorId()).getName();
+        return EventMapper.toFullDto(saved, getViews(saved), confirmed, userName);
     }
 
 // =========================================================================
@@ -212,36 +233,39 @@ public class EventServiceImpl implements EventService {
                                              List<Long> categories,
                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                              Integer from, Integer size) {
-
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("id").ascending());
-
         Specification<Event> spec = EventSpecification.adminFilter(users, states, categories, rangeStart, rangeEnd);
-
         List<Event> events = eventRepository.findAll(spec, pageable).getContent();
+
+        if (events.isEmpty()) return List.of();
 
         Map<Long, Long> viewsMap = getViewsMap(events);
         Map<Long, Long> confirmedMap = getConfirmedRequestsMap(events);
 
+        List<Long> initiatorIds = events.stream().map(Event::getInitiatorId).distinct().collect(Collectors.toList());
+        Map<Long, String> userNamesMap = userClient.getUsersByIds(initiatorIds).stream()
+            .collect(Collectors.toMap(UserDto::getId, UserDto::getName));
+
         return events.stream()
-                .map(e -> EventMapper.toFullDto(
-                        e,
-                        viewsMap.getOrDefault(e.getId(), 0L),
-                        confirmedMap.getOrDefault(e.getId(), 0L)))
-                .collect(Collectors.toList());
+            .map(e -> EventMapper.toFullDto(
+                e,
+                viewsMap.getOrDefault(e.getId(), 0L),
+                confirmedMap.getOrDefault(e.getId(), 0L),
+                userNamesMap.getOrDefault(e.getInitiatorId(), "Unknown")
+            ))
+            .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public EventFullDto updateAdminEvent(Long eventId, UpdateEventAdminRequest dto) {
         Event event = getEventOrThrow(eventId);
-
-        // Применяем изменения
         applyAdminUpdates(event, dto);
-
         Event saved = eventRepository.save(event);
-        Long confirmed = 0L; // TODO: Заменить на запрос к request-service или локальный репозиторий
+        Long confirmed = 0L;
 
-        return EventMapper.toFullDto(saved, getViews(saved), confirmed);
+        String userName = userClient.getUserById(event.getInitiatorId()).getName();
+        return EventMapper.toFullDto(saved, getViews(saved), confirmed, userName);
     }
 
 // =========================================================================
@@ -296,12 +320,22 @@ public class EventServiceImpl implements EventService {
     // Получает количество подтверждённых заявок для списка событий
     // Возвращает Map: eventId → количество заявок
     private Map<Long, Long> getConfirmedRequestsMap(List<Event> events) {
-        if (events.isEmpty()) return Map.of();
+        if (events == null || events.isEmpty()) {
+            return Map.of();
+        }
 
-        // TODO: В микросервисной архитектуре получение подтвержденных заявок
-        // должно происходить через request-service (Feign) или локальный RequestRepository,
-        // если он будет перенесен в этот сервис.
-        return events.stream().collect(Collectors.toMap(Event::getId, e -> 0L));
+        try {
+            List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+            return requestClient.getConfirmedCounts(eventIds);
+
+        } catch (Exception e) {
+            log.warn("Не удалось получить количество подтвержденных заявок: {}", e.getMessage());
+            return Map.of();
+        }
     }
 
     // Применяет изменения из запроса пользователя к событию
@@ -390,11 +424,6 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private User getUserOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
-    }
-
     private Event getEventOrThrow(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id=" + eventId + " не найдено"));
@@ -405,9 +434,23 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Категория с id=" + catId + " не найдена"));
     }
 
-    private void checkUserExists(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+    @Override
+    @Transactional(readOnly = true)
+    public EventInternalInfoDto getEventByIdInternal(Long id) {
+
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
+
+        String initiatorName = "Unknown";
+        if (event.getInitiatorId() != null) {
+            try {
+                initiatorName = userClient.getUserById(event.getInitiatorId()).getName();
+            } catch (Exception e) {
+                log.warn("Не удалось получить имя пользователя с id={}", event.getInitiatorId());
+            }
         }
+
+        return EventMapper.toInternalInfoDto(event, initiatorName);
+
     }
 }

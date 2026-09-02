@@ -3,7 +3,7 @@ package evm.compilation.mapper;
 import evm.compilation.dto.CompilationDto;
 import evm.compilation.dto.NewCompilationDto;
 import evm.compilation.model.Compilation;
-import evm.event.dto.EventShortDto;
+import evm.compilation.client.dto.EventShortDto;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;

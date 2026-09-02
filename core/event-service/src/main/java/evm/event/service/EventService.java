@@ -1,6 +1,7 @@
 package evm.event.service;
 
 import evm.event.dto.*;
+import evm.event.model.Event;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
@@ -33,4 +34,9 @@ public interface EventService {
                                       Integer from, Integer size);
 
     EventFullDto updateAdminEvent(Long eventId, UpdateEventAdminRequest request);
+
+    List<EventShortDto> getEventsByIds(List<Long> ids);
+
+    // Внутренний метод для получения события по ID без проверки статуса PUBLISHED
+    EventInternalInfoDto getEventByIdInternal(Long id);
 }

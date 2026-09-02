@@ -2,7 +2,10 @@ package evm.request.service;
 
 import evm.common.exceptions.ConflictException;
 import evm.common.exceptions.NotFoundException;
-import evm.request.dto.EventInfo;
+import evm.request.client.EventClient;
+import evm.request.client.UserClient;
+import evm.request.client.dto.EventInfoDto;
+import evm.request.client.dto.UserDto;
 import evm.request.dto.EventRequestStatusUpdateRequest;
 import evm.request.dto.EventRequestStatusUpdateResult;
 import evm.request.dto.ParticipationRequestDto;
@@ -10,10 +13,10 @@ import evm.request.mapper.RequestMapper;
 import evm.request.model.Request;
 import evm.request.model.Status;
 import evm.request.repository.RequestRepositoryJpa;
-import evm.users.repository.UserRepositoryJpa;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import feign.FeignException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,14 +27,15 @@ public class RequestManagementService {
 
     private final RequestRepositoryJpa requestRepository;
     private final RequestMapper mapper;
-    private final UserRepositoryJpa userRepository;
+    private final EventClient eventClient;
+    private final UserClient userClient;
 
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         checkUserExists(userId);
-        EventInfo event = getEventOrThrow(eventId);
+        EventInfoDto event = getEventOrThrow(eventId);
 
-        if (!event.getInitiatorId().equals(userId)) {
-            throw new NotFoundException("Событие с id=" + eventId + " не найдено");
+        if (event.getInitiator() == null || !event.getInitiator().getId().equals(userId)) {
+            throw new NotFoundException("Событие с id=" + eventId + " не найдено или вы не являетесь его инициатором");
         }
 
         return requestRepository.findAllByEventId(eventId).stream()
@@ -43,10 +47,10 @@ public class RequestManagementService {
     public EventRequestStatusUpdateResult changeRequestStatus(Long userId, Long eventId,
                                                               EventRequestStatusUpdateRequest dto) {
         checkUserExists(userId);
-        EventInfo event = getEventOrThrow(eventId);
+        EventInfoDto event = getEventOrThrow(eventId);
 
-        if (!event.getInitiatorId().equals(userId)) {
-            throw new NotFoundException("Событие с id=" + eventId + " не найдено");
+        if (event.getInitiator() == null || !event.getInitiator().getId().equals(userId)) {
+            throw new NotFoundException("Событие с id=" + eventId + " не найдено или вы не являетесь его инициатором");
         }
 
         List<Long> requestedIds = dto.getRequestIds();
@@ -82,7 +86,6 @@ public class RequestManagementService {
             throw new ConflictException("Лимит участников достигнут");
         }
 
-        // Проверяем что все заявки в статусе PENDING
         requests.forEach(r -> {
             if (!Status.PENDING.equals(r.getStatus())) {
                 throw new ConflictException("Заявка с id=" + r.getId() +
@@ -133,24 +136,22 @@ public class RequestManagementService {
             .build();
     }
 
-    private EventInfo getEventOrThrow(Long eventId) {
-        // TODO: В микросервисной архитектуре получение данных о событии
-        // должно происходить через Feign-клиент к event-service.
-        // Временная заглушка для успешной компиляции и запуска.
-
-        EventInfo info = new EventInfo();
-        info.setId(eventId);
-        info.setInitiatorId(1L);
-        info.setParticipantLimit(100);
-        info.setRequestModeration(true);
-        info.setState("PUBLISHED");
-
-        return info;
+    private EventInfoDto getEventOrThrow(Long eventId) {
+        try {
+            return eventClient.getEventInfo(eventId);
+        } catch (FeignException e) {
+            throw new NotFoundException("Событие с id=" + eventId + " не найдено или недоступно");
+        }
     }
 
     private void checkUserExists(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        try {
+            List<UserDto> users = userClient.getUsersByIds(List.of(userId));
+            if (users == null || users.isEmpty()) {
+                throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+            }
+        } catch (FeignException e) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
     }
 }

@@ -18,6 +18,8 @@ spring:
             - classpath:/config-repo/event-service/
             - classpath:/config-repo/request-service/
             - classpath:/config-repo/user-service/
+            - classpath:/config-repo/compilation-service/
+            - classpath:/config-repo/comment-service/
 
 management:
   endpoints:

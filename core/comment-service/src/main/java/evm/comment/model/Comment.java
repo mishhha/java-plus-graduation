@@ -1,6 +1,5 @@
 package evm.comment.model;
 
-import evm.users.model.User; // Связь с User оставляем
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -21,12 +20,11 @@ public class Comment {
     @Column(nullable = false)
     private String text;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private User author; // Прямая связь с User
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
 
     @Column(name = "event_id", nullable = false)
-    private Long eventId; // Было: Event event
+    private Long eventId;
 
     @Column(name = "created", nullable = false)
     private LocalDateTime created;

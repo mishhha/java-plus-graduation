@@ -23,7 +23,7 @@ public class EventSpecification {
 
             // Фильтр по пользователям
             if (users != null && !users.isEmpty()) {
-                predicates.add(root.get("initiator").get("id").in(users));
+                predicates.add(root.get("initiatorId").in(users));
             }
 
             // Фильтр по статусам
@@ -92,10 +92,10 @@ public class EventSpecification {
             // Если rangeStart не указан — берём события позже текущего момента
             LocalDateTime start = rangeStart != null
                     ? rangeStart : LocalDateTime.now();
-            predicates.add(cb.greaterThan(root.get("eventDate"), start));
+            predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), start));
 
             if (rangeEnd != null) {
-                predicates.add(cb.lessThan(root.get("eventDate"), rangeEnd));
+                predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

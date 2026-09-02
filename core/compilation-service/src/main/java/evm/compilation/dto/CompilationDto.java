@@ -1,6 +1,6 @@
 package evm.compilation.dto;
 
-import evm.event.dto.EventShortDto;
+import evm.compilation.client.dto.EventShortDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
