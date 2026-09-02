@@ -1,11 +1,8 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: gateway-server
   config:
-    import: "optional:configserver:http://config-server:8888"
+    import: "optional:configserver:http://localhost:8888,http://config-server:8888"
   cloud:
     config:
       discovery:
