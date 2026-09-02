@@ -4,12 +4,8 @@ server:
 spring:
   datasource:
     url: jdbc:h2:mem:ewm;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-  jpa:
-    defer-datasource-initialization: true
   sql:
     init:
-      data-locations: classpath:dataForTestEventsH2.sql
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+      mode: never
+  jpa:
+    defer-datasource-initialization: true

@@ -2,7 +2,7 @@ spring:
   application:
     name: main-service
   config:
-    import: "optional:configserver:http://localhost:8888,http://config-server:8888"
+    import: "optional:configserver:http://localhost:8888"
   cloud:
     config:
       discovery:
