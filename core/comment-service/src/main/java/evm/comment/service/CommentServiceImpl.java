@@ -1,7 +1,9 @@
 package evm.comment.service;
 
+import evm.comment.client.UserClient;
 import evm.comment.client.dto.EventClient;
 import evm.comment.client.dto.EventShortDto;
+import evm.comment.client.dto.UserDto;
 import evm.comment.dto.CommentDto;
 import evm.comment.dto.NewCommentDto;
 import evm.comment.mapper.CommentMapper;
@@ -18,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import feign.FeignException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +33,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper mapper;
     private final EventClient eventClient;
+    private final UserClient userClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,7 +65,7 @@ public class CommentServiceImpl implements CommentService {
 
         Comment c = mapper.toEntity(dto, userId, eventId);
         Comment saved = commentRepository.save(c);
-        return mapper.toDto(saved);
+        return mapToDtoWithAuthorName(saved);
     }
 
     @Override
@@ -102,7 +107,7 @@ public class CommentServiceImpl implements CommentService {
         c.setText(dto.getText());
         c.setEdited(LocalDateTime.now());
         Comment saved = commentRepository.save(c);
-        return mapper.toDto(saved);
+        return mapToDtoWithAuthorName(saved);
     }
 
     @Override
@@ -112,7 +117,7 @@ public class CommentServiceImpl implements CommentService {
         if (!comment.getEventId().equals(eventId)) {
             throw new NotFoundException("Комментарий с id=" + commentId + " не найден для события " + eventId);
         }
-        return mapper.toDto(comment);
+        return mapToDtoWithAuthorName(comment);
     }
 
     @Override
@@ -121,9 +126,10 @@ public class CommentServiceImpl implements CommentService {
         int fromVal = (from != null) ? from : 0;
         int sizeVal = (size != null) ? size : 10;
         Pageable p = PageRequest.of(fromVal / sizeVal, sizeVal);
-        // 👈 Благодаря @Cacheable в маппере, N+1 не возникнет!
-        return commentRepository.findAllByEventIdOrderByCreatedDesc(eventId, p)
-            .stream().map(mapper::toDto).collect(Collectors.toList());
+
+        List<Comment> comments = commentRepository.findAllByEventIdOrderByCreatedDesc(eventId, p);
+
+        return mapToDtoListWithAuthorNames(comments);
     }
 
     @Override
@@ -132,8 +138,10 @@ public class CommentServiceImpl implements CommentService {
         int fromVal = (from != null) ? from : 0;
         int sizeVal = (size != null) ? size : 10;
         Pageable p = PageRequest.of(fromVal / sizeVal, sizeVal);
-        return commentRepository.findAllByAuthorIdOrderByCreatedDesc(authorId, p)
-            .stream().map(mapper::toDto).collect(Collectors.toList());
+
+        List<Comment> comments = commentRepository.findAllByAuthorIdOrderByCreatedDesc(authorId, p);
+
+        return mapToDtoListWithAuthorNames(comments);
     }
 
     @Override
@@ -150,5 +158,56 @@ public class CommentServiceImpl implements CommentService {
     private Comment findCommentOrRaiseException(Long commentId) {
         return commentRepository.findById(commentId)
             .orElseThrow(() -> new NotFoundException("Комментарий с id = " + commentId + " не найден!"));
+    }
+
+    private CommentDto mapToDtoWithAuthorName(Comment comment) {
+        String authorName = getAuthorName(comment.getAuthorId());
+        return mapper.toDto(comment, authorName);
+    }
+
+    private List<CommentDto> mapToDtoListWithAuthorNames(List<Comment> comments) {
+        if (comments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> authorIds = comments.stream()
+                .map(Comment::getAuthorId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, String> authorNamesMap = getAuthorNamesMap(authorIds);
+
+        return comments.stream()
+                .map(comment -> {
+                    String authorName = authorNamesMap.getOrDefault(comment.getAuthorId(), "Unknown");
+                    return mapper.toDto(comment, authorName);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String getAuthorName(Long authorId) {
+        try {
+            List<UserDto> users = userClient.getUsersByIds(List.of(authorId));
+            if (users != null && !users.isEmpty() && users.get(0).getName() != null) {
+                return users.get(0).getName();
+            }
+        } catch (Exception e) {
+            log.warn("Не удалось получить имя автора с ID {}: {}", authorId, e.getMessage());
+        }
+        return "Unknown";
+    }
+
+    private Map<Long, String> getAuthorNamesMap(List<Long> authorIds) {
+        try {
+            List<UserDto> users = userClient.getUsersByIds(authorIds);
+            if (users != null) {
+                return users.stream()
+                        .filter(u -> u.getName() != null)
+                        .collect(Collectors.toMap(UserDto::getId, UserDto::getName, (a, b) -> a));
+            }
+        } catch (Exception e) {
+            log.warn("Не удалось получить имена авторов: {}", e.getMessage());
+        }
+        return Collections.emptyMap();
     }
 }
