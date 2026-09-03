@@ -15,10 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,12 +77,32 @@ public class CompilationServiceImpl implements CompilationService {
             compilations = compilationRepository.findAllByPinned(pinned, pageable);
         }
 
+        if (compilations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> allEventIds = compilations.stream()
+                .flatMap(c -> c.getEventIds().stream())
+                .collect(Collectors.toSet());
+
+        final Map<Long, EventShortDto> eventsMap;
+        if (!allEventIds.isEmpty()) {
+            List<EventShortDto> allEvents = eventClient.getEventsByIds(new ArrayList<>(allEventIds));
+            eventsMap = allEvents.stream()
+                    .collect(Collectors.toMap(EventShortDto::getId, e -> e));
+        } else {
+            eventsMap = Collections.emptyMap();
+        }
+
         return compilations.stream()
-            .map(c -> {
-                List<EventShortDto> events = getEventsByIds(new ArrayList<>(c.getEventIds()));
-                return mapper.toDto(c, events);
-            })
-            .collect(Collectors.toList());
+                .map(c -> {
+                    List<EventShortDto> compilationEvents = c.getEventIds().stream()
+                            .map(eventsMap::get)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+                    return mapper.toDto(c, compilationEvents);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
