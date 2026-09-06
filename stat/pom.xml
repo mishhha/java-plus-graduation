@@ -15,6 +15,7 @@
         <module>stat-client</module>
         <module>stat-dto</module>
         <module>stats-server</module>
+        <module>collector-service</module>
     </modules>
 
     <dependencyManagement>
