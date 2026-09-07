@@ -16,6 +16,8 @@
         <module>stat-dto</module>
         <module>stats-server</module>
         <module>collector-service</module>
+        <module>aggregator-service</module>
+        <module>analyzer-service</module>
     </modules>
 
     <dependencyManagement>

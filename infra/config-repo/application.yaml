@@ -14,3 +14,17 @@ spring:
   sql:
     init:
       mode: ${SQL_INIT_MODE:always}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 2000  # 2 секунды на установку соединения
+        readTimeout: 5000     # 5 секунд на ожидание ответа
+  circuitbreaker:
+    enabled: true

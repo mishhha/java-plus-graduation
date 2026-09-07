@@ -91,8 +91,6 @@ services:
     build: core/user-service
     image: user-service
     container_name: user-service
-    ports:
-      - "8081:8081"
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -219,3 +217,51 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  collector-service:
+    build: stat/collector-service
+    image: collector-service
+    container_name: collector-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
+      - SPRING_DATASOURCE_USERNAME=stat
+      - SPRING_DATASOURCE_PASSWORD=stat
+
+  aggregator-service:
+    build: stat/aggregator-service
+    image: aggregator-service
+    container_name: aggregator-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+
+  analyzer-service:
+    build: stat/analyzer-service
+    image: analyzer-service
+    container_name: analyzer-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      stats-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
+      - SPRING_DATASOURCE_USERNAME=stat
+      - SPRING_DATASOURCE_PASSWORD=stat
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_SQL_INIT_MODE=never
