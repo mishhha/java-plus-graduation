@@ -2,7 +2,9 @@ package evm.event.controller;
 
 import evm.event.dto.EventFullDto;
 import evm.event.dto.EventShortDto;
+import evm.event.dto.RecommendedEventDto;
 import evm.event.service.EventService;
+import evm.event.service.StatsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import java.util.List;
 public class PublicEventController {
 
     private final EventService eventService;
+    private final StatsService statsService;
 
     // Список событий с фильтрацией
     // Возвращает только PUBLISHED события
@@ -64,6 +67,49 @@ public class PublicEventController {
                                  HttpServletRequest request) {
         log.info("GET /events/{}", id);
 
+        String userIdHeader = request.getHeader("X-Sharer-User-Id");
+        if (userIdHeader != null && !userIdHeader.isBlank()) {
+            try {
+                Long userId = Long.parseLong(userIdHeader);
+                statsService.sendViewAction(userId, id);
+            } catch (NumberFormatException e) {
+                log.warn("Некорректный формат userId в заголовке: {}", userIdHeader);
+            }
+        }
+
         return eventService.getPublicEventById(id, request);
     }
+
+    @GetMapping("/recommendations")
+    public List<RecommendedEventDto> getRecommendations(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "10") int maxResults) {
+
+        log.info("GET /events/recommendations для userId={}", userId);
+
+        return statsService.getRecommendations(userId, maxResults).stream()
+                .map(proto -> RecommendedEventDto.builder()
+                        .eventId(proto.getEventId())
+                        .score(proto.getScore())
+                        .build())
+                .toList();
+    }
+
+    @GetMapping("/{id}/similar")
+    public List<RecommendedEventDto> getSimilarEvents(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "10") int maxResults) {
+
+        log.info("GET /events/{}/similar для userId={}", id, userId);
+
+        return statsService.getSimilarEvents(id, userId, maxResults).stream()
+                .map(proto -> RecommendedEventDto.builder()
+                        .eventId(proto.getEventId())
+                        .score(proto.getScore())
+                        .build())
+                .toList();
+    }
+
+
 }
