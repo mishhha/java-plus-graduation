@@ -98,4 +98,5 @@ public class RecommendationsControllerImpl extends RecommendationsControllerGrpc
         responseObserver.onCompleted();
         log.info("Отправлены данные о взаимодействиях для {} мероприятий", interactions.size());
     }
+
 }

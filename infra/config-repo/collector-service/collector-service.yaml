@@ -1,6 +1,11 @@
 server:
   port: 0
 
+logging:
+  level:
+    com.netflix.discovery: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
+
 grpc:
   server:
     port: 0
@@ -11,12 +16,3 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: ru.practicum.config.AvroSerializer
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery-server:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true

@@ -9,43 +9,52 @@ import org.apache.kafka.common.serialization.Deserializer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 
 public class AvroDeserializer<T extends SpecificRecordBase> implements Deserializer<T> {
 
-    private final Class<T> targetType;
-
-    public AvroDeserializer(Class<T> targetType) {
-        this.targetType = targetType;
-    }
+    private final Map<String, Class<?>> typeMapping = new HashMap<>();
 
     public AvroDeserializer() {
-        this.targetType = null;
     }
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-        // Настройки не требуются
+        if (isKey) {
+            return;
+        }
+
+        typeMapping.put("stats.user-actions.v1", ru.practicum.ewm.stats.avro.UserActionAvro.class);
+        typeMapping.put("stats.events-similarity.v1", ru.practicum.ewm.stats.avro.EventSimilarityAvro.class);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T deserialize(String topic, byte[] data) {
         if (data == null) {
             return null;
         }
+
+        Class<?> targetType = typeMapping.get(topic);
+
         if (targetType == null) {
-            throw new SerializationException("Target type is not configured");
+            throw new SerializationException(
+                    "Неизвестный топик или не настроен маппинг для: '" + topic + "'. " +
+                            "Доступные топики: " + typeMapping.keySet()
+            );
         }
+
         try {
-            T instance = targetType.getDeclaredConstructor().newInstance();
+
+            SpecificRecordBase instance = (SpecificRecordBase) targetType.getDeclaredConstructor().newInstance();
 
             SpecificDatumReader<T> reader = new SpecificDatumReader<>(instance.getSchema());
-
             BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
 
             return reader.read(null, decoder);
         } catch (IOException | ReflectiveOperationException e) {
-            throw new SerializationException("Ошибка десериализации Avro сообщения", e);
+            throw new SerializationException("Ошибка десериализации Avro сообщения для топика: " + topic, e);
         }
     }
 

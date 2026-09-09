@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import evm.stat.client.CollectorGrpcClient;
-import ru.practicum.ewm.stats.proto.collector.ActionTypeProto;
 
 import java.util.List;
 
@@ -18,7 +16,6 @@ import java.util.List;
 public class RequestController {
 
     private final RequestService service;
-    private final CollectorGrpcClient collectorClient;
 
     @GetMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.OK)
@@ -34,16 +31,7 @@ public class RequestController {
     ) {
         log.info("POST /users/{}/requests — eventId={}", userId, eventId);
 
-        ParticipationRequestDto requestDto = service.save(userId, eventId);
-
-        try {
-            collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
-            log.debug("Отправлено действие REGISTER: userId={}, eventId={}", userId, eventId);
-        } catch (Exception e) {
-            log.warn("Не удалось отправить действие REGISTER в collector-service: {}", e.getMessage());
-        }
-
-        return requestDto;
+        return service.save(userId, eventId);
     }
 
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
@@ -55,4 +43,12 @@ public class RequestController {
         return service.cancel(userId, requestId);
     }
 
+    @GetMapping("/{userId}/requests/{eventId}/confirmed")
+    @ResponseStatus(HttpStatus.OK)
+    public boolean hasConfirmedRequest(
+            @PathVariable Long userId,
+            @PathVariable Long eventId
+    ) {
+        return service.hasConfirmedRequest(userId, eventId);
+    }
 }

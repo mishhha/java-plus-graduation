@@ -19,6 +19,23 @@ public class StatsService {
     private final RecommendationsGrpcClient recommendationsClient;
 
     /**
+     * Получает рейтинг мероприятия через gRPC-клиент Analyzer (метод GetInteractionsCount).
+     */
+    public Double getEventRating(Long eventId) {
+        try {
+            List<RecommendedEventProto> protos = recommendationsClient.getInteractionsCount(List.of(eventId));
+
+            if (protos != null && !protos.isEmpty()) {
+                return protos.get(0).getScore();
+            }
+            return 0.0; // Если взаимодействий не было, рейтинг 0
+        } catch (Exception e) {
+            log.warn("Не удалось получить рейтинг для события {}: {}", eventId, e.getMessage());
+            return 0.0;
+        }
+    }
+
+    /**
      * Отправить действие "просмотр" мероприятия.
      */
     public void sendViewAction(Long userId, Long eventId) {
@@ -62,6 +79,19 @@ public class StatsService {
             return recommendationsClient.getRecommendationsForUser(userId, maxResults);
         } catch (Exception e) {
             log.error("Ошибка получения рекомендаций: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Получает рейтинг для СПИСКА мероприятий.
+     * Используется в getRatingMap (для админских и публичных списков).
+     */
+    public List<RecommendedEventProto> getInteractionsCount(List<Long> eventIds) {
+        try {
+            return recommendationsClient.getInteractionsCount(eventIds);
+        } catch (Exception e) {
+            log.warn("Не удалось получить рейтинг для списка событий: {}", e.getMessage());
             return List.of();
         }
     }

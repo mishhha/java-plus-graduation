@@ -9,12 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -64,20 +60,10 @@ public class PublicEventController {
     // Подробная информация об опубликованном событии.
     @GetMapping("/{id}")
     public EventFullDto getEvent(@PathVariable Long id,
-                                 HttpServletRequest request) {
-        log.info("GET /events/{}", id);
+                                 @RequestHeader(value = "X-EWM-USER-ID", required = false) Long userId) {
+        log.info("GET /events/{} для userId={}", id, userId);
 
-        String userIdHeader = request.getHeader("X-Sharer-User-Id");
-        if (userIdHeader != null && !userIdHeader.isBlank()) {
-            try {
-                Long userId = Long.parseLong(userIdHeader);
-                statsService.sendViewAction(userId, id);
-            } catch (NumberFormatException e) {
-                log.warn("Некорректный формат userId в заголовке: {}", userIdHeader);
-            }
-        }
-
-        return eventService.getPublicEventById(id, request);
+        return eventService.getPublicEventById(id, userId);
     }
 
     @GetMapping("/recommendations")
@@ -87,12 +73,7 @@ public class PublicEventController {
 
         log.info("GET /events/recommendations для userId={}", userId);
 
-        return statsService.getRecommendations(userId, maxResults).stream()
-                .map(proto -> RecommendedEventDto.builder()
-                        .eventId(proto.getEventId())
-                        .score(proto.getScore())
-                        .build())
-                .toList();
+        return eventService.getRecommendationsForUser(userId, maxResults);
     }
 
     @GetMapping("/{id}/similar")
@@ -103,12 +84,22 @@ public class PublicEventController {
 
         log.info("GET /events/{}/similar для userId={}", id, userId);
 
-        return statsService.getSimilarEvents(id, userId, maxResults).stream()
-                .map(proto -> RecommendedEventDto.builder()
-                        .eventId(proto.getEventId())
-                        .score(proto.getScore())
-                        .build())
-                .toList();
+        return eventService.getSimilarEvents(id, userId, maxResults);
+    }
+
+    /**
+     * Лайк мероприятия.
+     * Пользователь может лайкать только посещённые им мероприятия.
+     */
+    @PutMapping("/{eventId}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public void likeEvent(
+            @PathVariable Long eventId,
+            @RequestHeader("X-EWM-USER-ID") Long userId) {
+
+        log.info("PUT /events/{}/like для userId={}", eventId, userId);
+
+        eventService.likeEvent(userId, eventId);
     }
 
 

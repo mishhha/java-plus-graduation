@@ -1,12 +1,10 @@
 server:
   port: 0
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery-server:8761/eureka/
-  instance:
-    prefer-ip-address: true
+logging:
+  level:
+    com.netflix.discovery: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
 
 spring:
   kafka:

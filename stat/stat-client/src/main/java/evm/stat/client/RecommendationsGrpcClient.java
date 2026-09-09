@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.stats.proto.dashboard.RecommendationsControllerGrpc;
-import ru.practicum.ewm.stats.proto.dashboard.RecommendedEventProto;
-import ru.practicum.ewm.stats.proto.dashboard.SimilarEventsRequestProto;
-import ru.practicum.ewm.stats.proto.dashboard.UserPredictionsRequestProto;
+import ru.practicum.ewm.stats.proto.dashboard.*;
 
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +20,20 @@ public class RecommendationsGrpcClient {
 
     @GrpcClient("analyzer-service")
     private RecommendationsControllerGrpc.RecommendationsControllerBlockingStub analyzerStub;
+
+    public List<RecommendedEventProto> getInteractionsCount(List<Long> eventIds) {
+        try {
+            InteractionsCountRequestProto request = InteractionsCountRequestProto.newBuilder()
+                    .addAllEventId(eventIds)
+                    .build();
+
+            Iterator<RecommendedEventProto> responseIterator = analyzerStub.getInteractionsCount(request);
+            return iteratorToList(responseIterator);
+        } catch (Exception e) {
+            log.warn("Не удалось получить количество взаимодействий: {}", e.getMessage());
+            return List.of();
+        }
+    }
 
     /**
      * Получает похожие мероприятия для указанного события.

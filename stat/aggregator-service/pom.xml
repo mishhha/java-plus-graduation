@@ -19,20 +19,23 @@
     </properties>
 
     <dependencies>
-        <!-- Наш модуль со сгенерированными Avro-классами -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>ru.practicum</groupId>
             <artifactId>stat-client</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Kafka для чтения и записи сообщений -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
-        <!-- Eureka и Config -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>

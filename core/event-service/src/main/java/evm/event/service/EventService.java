@@ -16,7 +16,7 @@ public interface EventService {
                                         Integer from, Integer size,
                                         HttpServletRequest request);
 
-    EventFullDto getPublicEventById(Long id, HttpServletRequest request);
+    EventFullDto getPublicEventById(Long id, Long userId);
 
     // --- Private ---
     List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size);
@@ -39,4 +39,12 @@ public interface EventService {
 
     // Внутренний метод для получения события по ID без проверки статуса PUBLISHED
     EventInternalInfoDto getEventByIdInternal(Long id);
+
+    boolean hasUserAttendedEvent(Long userId, Long eventId);
+
+    void likeEvent(Long userId, Long eventId);
+
+    List<RecommendedEventDto> getRecommendationsForUser(Long userId, int maxResults);
+
+    List<RecommendedEventDto> getSimilarEvents(Long eventId, Long userId, int maxResults);
 }

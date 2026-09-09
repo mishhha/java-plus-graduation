@@ -21,33 +21,55 @@ public class RecommendationService {
     private final EventSimilarityRepository similarityRepository;
     private final UserInteractionRepository interactionRepository;
 
+    private static final int K_NEIGHBORS = 5;
+
     /**
-     * Метод 1: Найти мероприятия, похожие на указанное, исключая те, с которыми пользователь уже взаимодействовал.
-     * Используется, когда пользователь лайкнул мероприятие и хочет увидеть похожие.
+     * Метод 1: Получить сумму весов взаимодействий для списка мероприятий (популярность).
+     * (Ваш код был идеален, оставляем как есть)
+     */
+    @Transactional(readOnly = true)
+    public List<Map.Entry<Long, Double>> getInteractionsCount(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        log.info("Запрос сумм весов для eventIds: {}", eventIds);
+
+        List<Object[]> results = interactionRepository.sumWeightsByEventIds(eventIds);
+
+        log.info("Результат запроса: {} записей", results.size());
+        return results.stream()
+                .map(row -> Map.entry(((Number) row[0]).longValue(), ((Number) row[1]).doubleValue()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Метод 2: Найти мероприятия, похожие на указанное, исключая те, с которыми пользователь уже взаимодействовал.
+     * (Ваша логика верна, немного причесал код для читаемости)
      */
     @Transactional(readOnly = true)
     public List<Map.Entry<Long, Double>> getSimilarEvents(Long eventId, Long userId, int maxResults) {
-        // 1. Получаем все пары сходств, где участвует наше мероприятие
         List<EventSimilarity> similarities = similarityRepository.findAllByEventId(eventId);
+        if (similarities.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         List<Long> interactedEvents = interactionRepository.findEventIdsByUserId(userId);
         Set<Long> interactedSet = new HashSet<>(interactedEvents);
 
         return similarities.stream()
                 .map(sim -> {
-                    // Определяем "другое" мероприятие в паре (не то, которое запросили)
                     Long otherEventId = sim.getEventA().equals(eventId) ? sim.getEventB() : sim.getEventA();
                     return Map.entry(otherEventId, sim.getScore());
                 })
                 .filter(entry -> !interactedSet.contains(entry.getKey())) // Исключаем просмотренные
-                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue())) // Сортировка по убыванию сходства
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue())) // Сортировка по убыванию
                 .limit(maxResults)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Метод 2: Получить рекомендации для пользователя на основе его последних взаимодействий.
-     * Используется для главной страницы — "похожие на то, что вы недавно смотрели".
+     * Метод: Получить рекомендации для пользователя на основе предсказания оценки (KNN).
      */
     @Transactional(readOnly = true)
     public List<Map.Entry<Long, Double>> getRecommendationsForUser(Long userId, int maxResults) {
@@ -59,45 +81,69 @@ public class RecommendationService {
             return Collections.emptyList();
         }
 
-        List<Long> interactedEvents = interactionRepository.findEventIdsByUserId(userId);
-        Set<Long> interactedSet = new HashSet<>(interactedEvents);
-
-        Map<Long, Double> candidateScores = new HashMap<>();
-
+        List<Long> interactedEventIds = new ArrayList<>();
+        Map<Long, Double> interactedWeights = new HashMap<>();
         for (UserInteraction interaction : recentInteractions) {
-            Long interactedEventId = interaction.getEventId();
-            List<EventSimilarity> similarities = similarityRepository.findAllByEventId(interactedEventId);
+            interactedEventIds.add(interaction.getEventId());
+            interactedWeights.put(interaction.getEventId(), interaction.getWeight());
+        }
 
-            for (EventSimilarity sim : similarities) {
-                Long otherEventId = sim.getEventA().equals(interactedEventId) ? sim.getEventB() : sim.getEventA();
+        List<EventSimilarity> relatedSimilarities = similarityRepository.findAllByEventAInOrEventBIn(interactedEventIds);
 
-                if (interactedSet.contains(otherEventId)) {
-                    continue;
-                }
+        Map<Long, List<Map.Entry<Long, Double>>> candidateNeighbors = new HashMap<>();
 
-                candidateScores.merge(otherEventId, sim.getScore(), Math::max);
+        for (EventSimilarity sim : relatedSimilarities) {
+            Long candidateId = null;
+            Long neighborId = null;
+
+            if (interactedEventIds.contains(sim.getEventA()) && !interactedEventIds.contains(sim.getEventB())) {
+                candidateId = sim.getEventB();
+                neighborId = sim.getEventA();
+            } else if (interactedEventIds.contains(sim.getEventB()) && !interactedEventIds.contains(sim.getEventA())) {
+                candidateId = sim.getEventA();
+                neighborId = sim.getEventB();
+            }
+
+            if (candidateId != null && neighborId != null) {
+                candidateNeighbors.computeIfAbsent(candidateId, k -> new ArrayList<>())
+                        .add(Map.entry(neighborId, sim.getScore()));
             }
         }
 
-        return candidateScores.entrySet().stream()
-                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
-                .limit(maxResults)
-                .collect(Collectors.toList());
-    }
+        Map<Long, Double> candidatePredictedScores = new HashMap<>();
 
-    /**
-     * Метод 3: Получить сумму весов взаимодействий для списка мероприятий (популярность).
-     */
-    @Transactional(readOnly = true)
-    public List<Map.Entry<Long, Double>> getInteractionsCount(List<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) {
-            return Collections.emptyList();
+        for (Map.Entry<Long, List<Map.Entry<Long, Double>>> entry : candidateNeighbors.entrySet()) {
+            Long candidateId = entry.getKey();
+            List<Map.Entry<Long, Double>> neighbors = entry.getValue();
+
+            neighbors.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+            List<Map.Entry<Long, Double>> topKNeighbors = neighbors.stream()
+                    .limit(K_NEIGHBORS)
+                    .collect(Collectors.toList());
+
+            double weightedSum = 0.0;
+            double similaritySum = 0.0;
+
+            for (Map.Entry<Long, Double> neighbor : topKNeighbors) {
+                Long neighborId = neighbor.getKey();
+                Double similarity = neighbor.getValue();
+                Double userWeight = interactedWeights.get(neighborId);
+
+                if (userWeight != null) {
+                    weightedSum += userWeight * similarity;
+                    similaritySum += similarity;
+                }
+            }
+
+            if (similaritySum > 0) {
+                double predictedScore = weightedSum / similaritySum;
+                candidatePredictedScores.put(candidateId, predictedScore);
+            }
         }
 
-        List<Object[]> results = interactionRepository.sumWeightsByEventIds(eventIds);
-
-        return results.stream()
-                .map(row -> Map.entry((Long) row[0], (Double) row[1]))
+        return candidatePredictedScores.entrySet().stream()
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .limit(maxResults)
                 .collect(Collectors.toList());
     }
 }
