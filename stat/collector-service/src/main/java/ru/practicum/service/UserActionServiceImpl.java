@@ -12,8 +12,6 @@ import ru.practicum.ewm.stats.proto.collector.ActionTypeProto;
 import ru.practicum.ewm.stats.proto.collector.UserActionControllerGrpc;
 import ru.practicum.ewm.stats.proto.collector.UserActionProto;
 
-import java.time.Instant;
-
 @Slf4j
 @GrpcService
 @RequiredArgsConstructor
