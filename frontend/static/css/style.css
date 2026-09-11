@@ -338,3 +338,81 @@ h2 {
     color: var(--bg-color, #000604);
     text-shadow: none;
 }
+
+/* ══ GLITCH-заголовок: мерцание, потеря сигнала, искры ══ */
+.glitch {
+    position: relative;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--text-color, #00ffc8);
+    animation: flicker 4s infinite, surge 4s infinite;
+}
+
+/* КОПИИ текста для рассинхрона каналов */
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* красный канал — уезжает влево верхними срезами */
+.glitch::before {
+    color: #ff2244;
+    animation: glitch-red 3.1s infinite steps(1);
+}
+
+/* синий канал — уезжает вправо нижними срезами */
+.glitch::after {
+    color: #00f3ff;
+    animation: glitch-blue 2.3s infinite steps(1);
+}
+
+/* ПОТЕРЯ СИГНАЛА: редкие короткие провалы яркости */
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
+    3%  { opacity: .6; }
+    4%  { opacity: 1; }
+    19% { opacity: 1; }
+    20% { opacity: .3; }
+    21% { opacity: .9; }
+    22% { opacity: .5; }
+    23% { opacity: 1; }
+    63% { opacity: .45; }
+    64% { opacity: 1; }
+    87% { opacity: .25; }
+    88% { opacity: .85; }
+    89% { opacity: .4; }
+    90% { opacity: 1; }
+}
+
+/* ИСКРА: вспышка свечения в момент сбоя */
+@keyframes surge {
+    0%, 86%, 92%, 100% { text-shadow: 0 0 8px rgba(0, 255, 200, .55); }
+    88% { text-shadow: 0 0 16px rgba(0, 255, 200, .95), 0 0 42px rgba(0, 243, 255, .55); }
+    90% { text-shadow: 0 0 4px rgba(0, 255, 200, .35); }
+}
+
+/* ГЛИТЧ: верхние срезы текста */
+@keyframes glitch-red {
+    0%, 84%, 94%, 100% { opacity: 0; transform: none; }
+    85% { opacity: .8; transform: translate(-3px, -1px); clip-path: inset(5% 0 62% 0); }
+    88% { opacity: .8; transform: translate(2px, 0);     clip-path: inset(18% 0 48% 0); }
+    91% { opacity: .8; transform: translate(-1px, 1px);  clip-path: inset(2% 0 75% 0); }
+    93% { opacity: 0; transform: none; }
+}
+
+/* ГЛИТЧ: нижние срезы текста */
+@keyframes glitch-blue {
+    0%, 78%, 90%, 100% { opacity: 0; transform: none; }
+    80% { opacity: .8; transform: translate(3px, 1px);  clip-path: inset(58% 0 8% 0); }
+    84% { opacity: .8; transform: translate(-2px, 0);   clip-path: inset(42% 0 22% 0); }
+    87% { opacity: .8; transform: translate(1px, -1px); clip-path: inset(70% 0 2% 0); }
+    89% { opacity: 0; transform: none; }
+}
