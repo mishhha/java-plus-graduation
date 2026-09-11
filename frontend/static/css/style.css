@@ -222,3 +222,39 @@ h2 {
     border-color: var(--text-color, #00ffc8);
     text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
 }
+
+/* ── Cookie-баннер и экран отказа ── */
+.cookie-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0, 0, 0, .88);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.cookie-box {
+    width: min(560px, 94vw);
+    max-height: 86vh; overflow-y: auto;
+    background: var(--bg-color, #000604);
+    border: 1px solid var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+    padding: 24px;
+}
+.cookie-box h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: 1px; }
+.cookie-text { font-size: 14px; line-height: 1.6; }
+.cookie-text ul { padding-left: 18px; }
+.cookie-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+.cookie-actions button {
+    background: transparent;
+    border: 1px solid var(--text-color, #00ffc8);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit; font-size: 14px;
+    padding: 8px 16px; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.cookie-actions button:hover {
+    background: var(--text-color, #00ffc8);
+    color: var(--bg-color, #000604);
+    text-shadow: none;
+}
+.btn-decline { border-color: #ff2244 !important; color: #ff2244 !important; }
+.btn-decline:hover { background: #ff2244 !important; color: #000 !important; }
+.cookie-box.denied { border-color: #ff2244; box-shadow: 0 0 8px rgba(255, 34, 68, .55); }

@@ -33,6 +33,38 @@
     </div>
 </div>
 
+<div id="cookie-overlay" class="cookie-overlay hidden">
+    <div class="cookie-box">
+        <h2>🍪 Политика конфиденциальности</h2>
+        <div class="cookie-text">
+            <p>Сайт использует cookie-файлы и обрабатывает данные о действиях
+                (просмотры, лайки) для работы рекомендательной системы.</p>
+            <ul>
+                <li><b>ewm_user_id</b> — анонимный идентификатор пользователя (cookie, 1 год);</li>
+                <li><b>история действий</b> — просмотры и лайки для расчёта рейтингов и рекомендаций;</li>
+                <li><b>имя и e-mail</b> — создаются автоматически как гостевые (Guest), без ваших реальных данных.</li>
+            </ul>
+            <p>Нажимая «Принять», вы соглашаетесь с обработкой этих данных.
+                Без согласия использование сайта невозможно.</p>
+        </div>
+        <div class="cookie-actions">
+            <button id="cookie-accept" class="btn-accept">✔ Принять</button>
+            <button id="cookie-decline" class="btn-decline">✖ Отклонить</button>
+        </div>
+    </div>
+</div>
+
+<div id="access-denied" class="cookie-overlay hidden">
+    <div class="cookie-box denied">
+        <h2>⛔ Доступ ограничен</h2>
+        <p>Вы отклонили политику конфиденциальности.
+            Без согласия на обработку cookie использование сайта невозможно.</p>
+        <div class="cookie-actions">
+            <button id="cookie-retry" class="btn-accept">↺ Пересмотреть решение</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="toast hidden"></div>
 <script src="/js/app.js"></script>
 </body>

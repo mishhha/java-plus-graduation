@@ -177,17 +177,50 @@ function closeModal() {
     refresh(); // после закрытия обновляем списки (рейтинг мог измениться)
 }
 
-$('#user-reset').addEventListener('click', resetUser);
+/* ── Согласие на cookie (гейт перед запуском приложения) ── */
+const CONSENT_KEY = 'ewm_cookie_consent';
 
-(async function init() {
-    try {
-        currentUserId = await ensureUser();
-        renderUserBadge();
-        refresh();
-    } catch (e) {
-        toast('Не удалось войти: ' + e.message, true);
-    }
-})();
+function startApp() {
+    $('#user-reset').addEventListener('click', resetUser);
+    (async function init() {
+        try {
+            currentUserId = await ensureUser();
+            renderUserBadge();
+            refresh();
+        } catch (e) {
+            toast('Не удалось войти: ' + e.message, true);
+        }
+    })();
+}
+
+function acceptConsent() {
+    localStorage.setItem(CONSENT_KEY, 'accepted');
+    $('#cookie-overlay').classList.add('hidden');
+    startApp();
+}
+
+function declineConsent() {
+    localStorage.setItem(CONSENT_KEY, 'declined');
+    $('#cookie-overlay').classList.add('hidden');
+    $('#access-denied').classList.remove('hidden');
+}
+
+$('#cookie-accept').addEventListener('click', acceptConsent);
+$('#cookie-decline').addEventListener('click', declineConsent);
+$('#cookie-retry').addEventListener('click', () => {
+    localStorage.removeItem(CONSENT_KEY);
+    $('#access-denied').classList.add('hidden');
+    $('#cookie-overlay').classList.remove('hidden');
+});
+
+const consent = localStorage.getItem(CONSENT_KEY);
+if (consent === 'accepted') {
+    startApp();
+} else if (consent === 'declined') {
+    $('#access-denied').classList.remove('hidden');
+} else {
+    $('#cookie-overlay').classList.remove('hidden');
+}
 
 $('#modal-overlay').addEventListener('click', (ev) => {
     if (ev.target.id === 'modal-overlay') closeModal();
