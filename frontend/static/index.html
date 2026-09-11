@@ -16,12 +16,23 @@
 </header>
 
 <main>
-    <section>
+    <section id="section-recommendations">
         <h2> Рекомендации для вас</h2>
         <div id="recommendations" class="grid"></div>
     </section>
-    <section>
-        <h2> Все мероприятия</h2>
+
+    <section id="section-my">
+        <h2> Мои события</h2>
+        <div id="my-created" class="grid"></div>
+        <h2> Мои участия</h2>
+        <div id="my-events" class="grid"></div>
+    </section>
+
+    <section id="section-events">
+        <div class="section-head">
+            <h2> Все мероприятия</h2>
+            <button id="create-event-btn" class="btn-create" type="button" onclick="openCreateModal()">＋ Создать мероприятие</button>
+        </div>
         <div id="events" class="grid"></div>
     </section>
 </main>
@@ -30,6 +41,39 @@
     <div class="modal">
         <button class="modal-close" onclick="closeModal()">✕</button>
         <div id="modal-body"></div>
+    </div>
+</div>
+
+<!-- Создание мероприятия -->
+<div id="create-overlay" class="auth-overlay hidden">
+    <div class="auth-box">
+        <button type="button" class="auth-close" onclick="closeCreateModal()">✕</button>
+        <h2>＞ Новое мероприятие_</h2>
+        <form id="create-event-form" novalidate>
+            <label>Название
+                <input id="ce-title" type="text" maxlength="120" placeholder="Рок-концерт">
+            </label>
+            <label>Аннотация (от 20 символов)
+                <input id="ce-annotation" type="text" maxlength="2000" placeholder="Краткое описание для карточки">
+            </label>
+            <label>Описание (полное)
+                <textarea id="ce-description" rows="4" placeholder="Что интересного на мероприятии"></textarea>
+            </label>
+            <label>ID категории
+                <input id="ce-category" type="number" min="1" value="1">
+            </label>
+            <label>Дата и время (ГГГГ-ММ-ДД ЧЧ:мм:сс)
+                <input id="ce-date" type="text" value="2027-01-01 12:00:00">
+            </label>
+            <label class="row-check">
+                <input id="ce-paid" type="checkbox"> Платное мероприятие
+            </label>
+            <label>Лимит участников (0 = без лимита)
+                <input id="ce-limit" type="number" min="0" value="10">
+            </label>
+            <p id="create-error" class="auth-error hidden"></p>
+            <button type="submit">Создать</button>
+        </form>
     </div>
 </div>
 

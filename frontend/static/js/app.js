@@ -1,10 +1,15 @@
 /* ========== Хелперы ========== */
 const $ = (s) => document.querySelector(s);
-let currentUserId = null;
-const userId = () => currentUserId;
 const getId = (x) => x.id ?? x.eventId;
+
+let currentUserId = null;
+let currentUserName = null;
+const userId = () => currentUserId;
+
 const liked = new Set();       // сердечки, нажатые в этой сессии
-let eventsCache = new Map();   // id -> мероприятие (для обогащения рекомендаций)
+let eventsCache = new Map();   // id -> мероприятие
+
+const CONSENT_KEY = 'ewm_cookie_consent';
 
 /* ========== Cookie ========== */
 function getCookie(name) {
@@ -46,7 +51,42 @@ function toast(msg, isError = false) {
     setTimeout(() => el.classList.add('hidden'), 2500);
 }
 
-/* ========== Карточка ========== */
+/* ========== Доступ: гость vs пользователь ========== */
+function isGuest() {
+    return currentUserId == null;
+}
+
+function renderUserBadge() {
+    const label = $('#user-label');
+    const btn = $('#user-logout');
+    if (isGuest()) {
+        label.textContent = 'Гость';
+        btn.textContent = '🔑 Войти';
+        btn.title = 'Войти или зарегистрироваться';
+        btn.onclick = () => { hideAuthError(); showAuthOverlay(); };
+    } else {
+        label.textContent = `Вы — ${currentUserName || 'пользователь #' + currentUserId}`;
+        btn.textContent = '⎋ Выйти';
+        btn.title = 'Выйти и войти под другим пользователем';
+        btn.onclick = logout;
+    }
+}
+
+function applyAccessRules() {
+    renderUserBadge();
+    const guest = isGuest();
+    $('#section-recommendations').classList.toggle('hidden', guest);
+    $('#section-my').classList.toggle('hidden', guest);
+    $('#create-event-btn').classList.toggle('hidden', guest);
+}
+
+function requireAuth() {
+    toast('Войдите или зарегистрируйтесь — действие доступно только пользователям');
+    hideAuthError();
+    showAuthOverlay();
+}
+
+/* ========== Карточки ========== */
 function card(e, score) {
     const id = getId(e);
     const title = e.title || e.name || `Мероприятие #${id}`;
@@ -69,27 +109,28 @@ function card(e, score) {
 </div>`;
 }
 
-/* ========== Модалка мероприятия ========== */
-function openModal(e) {
-    const date = (e.eventDate || '').replace('T', ' ');
-    $('#modal-body').innerHTML = `
-        <h2>${e.title || ''}</h2>
-        <p class="modal-annotation">${e.annotation || ''}</p>
-        <div class="row"><span>Категория</span><span>${e.category?.name || '—'}</span></div>
-        <div class="row"><span>Дата и время</span><span>${date}</span></div>
-        <div class="row"><span>Рейтинг</span><span>⭐ ${e.rating ?? 0}</span></div>
-        <div class="row"><span>Вход</span><span>${e.paid ? 'Платный' : 'Бесплатный'}</span></div>
-        <div class="row"><span>Лимит участников</span><span>${e.participantLimit ? e.participantLimit : 'без лимита'}</span></div>
-        <div class="row"><span>Координаты</span><span>${e.location ? e.location.lat + ', ' + e.location.lon : '—'}</span></div>
-        <div class="row"><span>Организатор</span><span>${e.initiator?.name || '—'}</span></div>
-        <h3>&gt; Описание</h3>
-        <p class="modal-description">${e.description || ''}</p>
-    `;
-    $('#modal-overlay').classList.remove('hidden');
+function createdCard(e) {
+    const id = getId(e);
+    return `
+<div class="card">
+    <h3>${e.title || `Мероприятие #${id}`}</h3>
+    <p class="annotation">${e.annotation || ''}</p>
+    <p>📝 Статус: ${e.state || '—'} · ⭐ рейтинг: ${e.rating ?? 0}</p>
+</div>`;
 }
-function closeModal() {
-    $('#modal-overlay').classList.add('hidden');
-    refresh();
+
+function requestCard(r) {
+    const id = r.event;
+    const ev = eventsCache.get(id) || {};
+    return `
+<div class="card">
+    <h3>${ev.title || `Мероприятие #${id}`}</h3>
+    <p class="annotation">${ev.annotation || ''}</p>
+    <p>📌 Статус участия: ${r.status || '—'}</p>
+    <div class="actions">
+        <button onclick="viewEvent(${id})">👁 Просмотр</button>
+    </div>
+</div>`;
 }
 
 /* ========== Загрузка данных ========== */
@@ -104,34 +145,72 @@ async function loadEvents() {
 }
 
 async function loadRecommendations() {
-    const box = $('#recommendations');
-    if (currentUserId == null) {
-        box.innerHTML = '<p>🔑 Войдите, чтобы получить рекомендации</p>';
-        return;
-    }
+    if (isGuest()) { $('#recommendations').innerHTML = ''; return; }
     try {
         const recs = await api('/events/recommendations');
-        if (!recs || !recs.length) {
-            box.innerHTML = '<p>Рекомендаций пока нет — посмотри или лайкни мероприятия!</p>';
-            return;
-        }
-        box.innerHTML = recs.map(r => {
+        $('#recommendations').innerHTML = recs.map(r => {
             const id = getId(r);
             const event = eventsCache.get(id) || { id };
             return card({ ...event, id }, r.score);
-        }).join('');
+        }).join('') || '<p>Рекомендаций пока нет — посмотри или лайкни мероприятия!</p>';
     } catch (err) {
-        box.innerHTML = '<p>Рекомендации недоступны</p>';
+        $('#recommendations').innerHTML = '<p>Рекомендации недоступны</p>';
+    }
+}
+
+async function loadMy() {
+    if (isGuest()) { $('#my-created').innerHTML = ''; $('#my-events').innerHTML = ''; return; }
+    try {
+        const mine = await api(`/users/${currentUserId}/events?from=0&size=50`);
+        $('#my-created').innerHTML = (mine && mine.length)
+            ? mine.map(createdCard).join('')
+            : '<p>У вас пока нет созданных мероприятий</p>';
+    } catch (e) {
+        $('#my-created').innerHTML = '<p>Не удалось загрузить мои события</p>';
+    }
+    try {
+        const reqs = await api(`/users/${currentUserId}/requests`);
+        $('#my-events').innerHTML = (reqs && reqs.length)
+            ? reqs.map(requestCard).join('')
+            : '<p>Вы пока ни в чём не участвуете — запишитесь на мероприятие!</p>';
+    } catch (e) {
+        $('#my-events').innerHTML = '<p>Не удалось загрузить участия</p>';
     }
 }
 
 async function refresh() {
+    applyAccessRules();
     await loadEvents();
     await loadRecommendations();
+    await loadMy();
 }
 
-/* ========== Действия ========== */
+/* ========== Модалка карточки мероприятия ========== */
+function openModal(e) {
+    const date = (e.eventDate || '').replace('T', ' ');
+    $('#modal-body').innerHTML = `
+        <h2>${e.title || ''}</h2>
+        <p class="modal-annotation">${e.annotation || ''}</p>
+        <div class="row"><span>Категория</span><span>${e.category?.name || '—'}</span></div>
+        <div class="row"><span>Дата и время</span><span>${date}</span></div>
+        <div class="row"><span>Рейтинг</span><span>⭐ ${e.rating ?? 0}</span></div>
+        <div class="row"><span>Вход</span><span>${e.paid ? 'Платный' : 'Бесплатный'}</span></div>
+        <div class="row"><span>Лимит участников</span><span>${e.participantLimit ? e.participantLimit : 'без лимита'}</span></div>
+        <div class="row"><span>Координаты</span><span>${e.location ? e.location.lat + ', ' + e.location.lon : '—'}</span></div>
+        <div class="row"><span>Организатор</span><span>${e.initiator?.name || '—'}</span></div>
+        <h3>＞ Описание</h3>
+        <p class="modal-description">${e.description || ''}</p>
+    `;
+    $('#modal-overlay').classList.remove('hidden');
+}
+function closeModal() {
+    $('#modal-overlay').classList.add('hidden');
+    refresh();
+}
+
+/* ========== Действия над мероприятием ========== */
 async function viewEvent(id) {
+    if (isGuest()) { requireAuth(); return; }
     try {
         const event = await api(`/events/${id}`);
         openModal(event);
@@ -140,7 +219,7 @@ async function viewEvent(id) {
 }
 
 async function registerEvent(id) {
-    if (currentUserId == null) { toast('Сначала войдите 🔑', true); showAuthOverlay(); return; }
+    if (isGuest()) { requireAuth(); return; }
     try {
         await api(`/users/${userId()}/requests?eventId=${id}`, { method: 'POST' });
         toast('Заявка создана ✅');
@@ -149,44 +228,44 @@ async function registerEvent(id) {
 }
 
 async function likeEvent(id) {
-    if (currentUserId == null) { toast('Сначала войдите 🔑', true); showAuthOverlay(); return; }
+    if (isGuest()) { requireAuth(); return; }
     try {
         await api(`/events/${id}/like`, { method: 'PUT' });
         liked.add(id);
-        toast('Лайк отправлен ♥');
+        toast('Лайк отправлен ❤️');
         refresh();
     } catch (e) { toast('Лайк не прошёл: ' + e.message, true); }
 }
 
-/* ========== Регистрация, вход, гость ========== */
-let currentUserName = null;
+/* ========== Создание мероприятия ========== */
+function openCreateModal() {
+    if (isGuest()) { requireAuth(); return; }
+    hideCreateError();
+    $('#create-overlay').classList.remove('hidden');
+}
+function closeCreateModal() {
+    $('#create-overlay').classList.add('hidden');
+}
+function showCreateError(msg) {
+    const el = $('#create-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+}
+function hideCreateError() {
+    $('#create-error').classList.add('hidden');
+}
 
+/* ========== Регистрация / вход / гость ========== */
 function showAuthError(msg) { const el = $('#auth-error'); el.textContent = msg; el.classList.remove('hidden'); }
 function hideAuthError() { $('#auth-error').classList.add('hidden'); }
 function showAuthOverlay() { $('#auth-overlay').classList.remove('hidden'); }
 function hideAuthOverlay() { $('#auth-overlay').classList.add('hidden'); }
 
-function renderUserBadge() {
-    const label = $('#user-label');
-    const btn = $('#user-logout');
-    if (currentUserId != null) {
-        label.textContent = `Вы — ${currentUserName || 'пользователь #' + currentUserId}`;
-        btn.textContent = '⎋ Выйти';
-        btn.title = 'Выйти и войти под другим пользователем';
-        btn.onclick = logout;
-    } else {
-        label.textContent = 'Гость';
-        btn.textContent = '🔑 Войти';
-        btn.title = 'Войти или зарегистрироваться';
-        btn.onclick = () => { hideAuthError(); showAuthOverlay(); };
-    }
-}
-
 async function fetchUserName(id) {
     try {
         const list = await api(`/admin/users?ids=${id}`);
         if (Array.isArray(list) && list.length) return list[0].name;
-    } catch (e) { /* имя недоступно — не критично */ }
+    } catch (e) { /* не критично */ }
     return null;
 }
 
@@ -205,21 +284,26 @@ async function loginById(id) {
     return list[0].id;
 }
 
-function logout() {
-    deleteCookie('ewm_user_id');
-    deleteCookie('ewm_user_name');
-    currentUserId = null;
-    currentUserName = null;
-    renderUserBadge();
-    hideAuthError();
-    showAuthOverlay();
+function enterApp() {
+    hideAuthOverlay();
     refresh();
 }
 
 function closeAuth() {
     hideAuthError();
     hideAuthOverlay();
-    toast('Вы просматриваете как гость 👤');
+    toast('Вы просматриваете как гость');
+    refresh();
+}
+
+function logout() {
+    deleteCookie('ewm_user_id');
+    deleteCookie('ewm_user_name');
+    currentUserId = null;
+    currentUserName = null;
+    liked.clear();
+    showAuthOverlay();
+    refresh();
 }
 
 async function boot() {
@@ -228,88 +312,16 @@ async function boot() {
         currentUserId = Number(stored);
         currentUserName = getCookie('ewm_user_name') || null;
         if (!currentUserName) currentUserName = await fetchUserName(currentUserId);
-        hideAuthOverlay();
+        enterApp();
     } else {
         currentUserId = null;
         currentUserName = null;
-        showAuthOverlay(); // можно закрыть крестиком и остаться гостем
+        showAuthOverlay();
+        refresh();
     }
-    renderUserBadge();
-    refresh();
 }
 
-$('#register-form').addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    hideAuthError();
-    const name = $('#reg-name').value.trim();
-    const email = $('#reg-email').value.trim();
-    if (name.length < 2) { showAuthError('Имя должно содержать минимум 2 символа'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Некорректный email'); return; }
-    try {
-        currentUserId = await registerUser(name, email);
-        currentUserName = name;
-        hideAuthOverlay();
-        renderUserBadge();
-        toast(`Добро пожаловать, ${name}!`);
-        refresh();
-    } catch (e) { showAuthError(e.message); }
-});
-
-$('#login-btn').addEventListener('click', async () => {
-    hideAuthError();
-    const id = Number($('#login-id').value);
-    if (!id || id < 1) { showAuthError('Введите корректный ID'); return; }
-    try {
-        currentUserId = await loginById(id);
-        currentUserName = getCookie('ewm_user_name') || null;
-        hideAuthOverlay();
-        renderUserBadge();
-        toast(`С возвращением, ${currentUserName || 'пользователь #' + currentUserId}!`);
-        refresh();
-    } catch (e) { showAuthError(e.message); }
-});
-
-$('#auth-close').addEventListener('click', closeAuth);
-
-/* ========== Обработчики формы ========== */
-$('#register-form').addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    hideAuthError();
-    const name = $('#reg-name').value.trim();
-    const email = $('#reg-email').value.trim();
-    if (name.length < 2) { showAuthError('Имя должно содержать минимум 2 символа'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Некорректный email'); return; }
-    try {
-        currentUserId = await registerUser(name, email);
-        toast(`Добро пожаловать, ${name}!`);
-        enterApp();
-    } catch (e) { showAuthError(e.message); }
-});
-
-$('#login-btn').addEventListener('click', async () => {
-    hideAuthError();
-    const id = Number($('#login-id').value);
-    if (!id || id < 1) { showAuthError('Введите корректный ID'); return; }
-    try {
-        currentUserId = await loginById(id);
-        toast(`С возвращением, пользователь #${id}!`);
-        enterApp();
-    } catch (e) { showAuthError(e.message); }
-});
-
-$('#user-logout').addEventListener('click', logout);
-
-/* ========== Модалка: закрытие ========== */
-$('#modal-overlay').addEventListener('click', (ev) => {
-    if (ev.target.id === 'modal-overlay') closeModal();
-});
-document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && !$('#modal-overlay').classList.contains('hidden')) closeModal();
-});
-
-/* ========== Cookie-consent гейт ========== */
-const CONSENT_KEY = 'ewm_cookie_consent';
-
+/* ========== Слушатели ========== */
 $('#cookie-accept').addEventListener('click', () => {
     localStorage.setItem(CONSENT_KEY, 'accepted');
     $('#cookie-overlay').classList.add('hidden');
@@ -324,6 +336,73 @@ $('#cookie-retry').addEventListener('click', () => {
     localStorage.removeItem(CONSENT_KEY);
     $('#access-denied').classList.add('hidden');
     $('#cookie-overlay').classList.remove('hidden');
+});
+
+$('#auth-close').addEventListener('click', closeAuth);
+
+$('#register-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    hideAuthError();
+    const name = $('#reg-name').value.trim();
+    const email = $('#reg-email').value.trim();
+    if (name.length < 2) { showAuthError('Имя должно содержать минимум 2 символа'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Некорректный email'); return; }
+    try {
+        currentUserId = await registerUser(name, email);
+        currentUserName = name;
+        enterApp();
+        toast(`Добро пожаловать, ${name}!`);
+    } catch (e) { showAuthError(e.message); }
+});
+
+$('#login-btn').addEventListener('click', async () => {
+    hideAuthError();
+    const id = Number($('#login-id').value);
+    if (!id || id < 1) { showAuthError('Введите корректный ID'); return; }
+    try {
+        currentUserId = await loginById(id);
+        currentUserName = getCookie('ewm_user_name') || null;
+        enterApp();
+        toast(`С возвращением, ${currentUserName || 'пользователь #' + currentUserId}!`);
+    } catch (e) { showAuthError(e.message); }
+});
+
+$('#create-event-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    hideCreateError();
+    const body = {
+        title: $('#ce-title').value.trim(),
+        annotation: $('#ce-annotation').value.trim(),
+        description: $('#ce-description').value.trim(),
+        category: Number($('#ce-category').value),
+        eventDate: $('#ce-date').value.trim(),
+        location: { lat: 55.75, lon: 37.62 },
+        paid: $('#ce-paid').checked,
+        participantLimit: Number($('#ce-limit').value),
+        requestModeration: false,
+    };
+    if (body.title.length < 3) { showCreateError('Название — минимум 3 символа'); return; }
+    if (body.annotation.length < 20 || body.description.length < 20) {
+        showCreateError('Аннотация и описание — минимум 20 символов'); return;
+    }
+    try {
+        await api(`/users/${currentUserId}/events`, { method: 'POST', body: JSON.stringify(body) });
+        closeCreateModal();
+        toast('Мероприятие создано! Ожидает публикации');
+        refresh();
+    } catch (e) { showCreateError(e.message); }
+});
+
+$('#create-overlay').addEventListener('click', (ev) => {
+    if (ev.target.id === 'create-overlay') closeCreateModal();
+});
+$('#modal-overlay').addEventListener('click', (ev) => {
+    if (ev.target.id === 'modal-overlay') closeModal();
+});
+document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    if (!$('#create-overlay').classList.contains('hidden')) { closeCreateModal(); return; }
+    if (!$('#modal-overlay').classList.contains('hidden')) { closeModal(); return; }
 });
 
 /* ========== Точка входа ========== */
