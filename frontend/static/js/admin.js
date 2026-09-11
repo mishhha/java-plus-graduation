@@ -125,8 +125,8 @@ function adminCard(e) {
     <p>${GLYPH.state} Статус: <span class="state-${(e.state || '').toLowerCase()}">${e.state || '—'}</span></p>
     <p>${GLYPH.date} ${(e.eventDate || '').replace('T', ' ')}</p>
     <div class="actions">
-        ${e.state !== 'PUBLISHED' ? `<button onclick="publishEvent(${id})">${GLYPH.ok} Опубликовать</button>` : ''}
-        ${e.state !== 'CANCELED' ? `<button onclick="rejectEvent(${id})">${GLYPH.reject} Отклонить</button>` : ''}
+        ${e.state === 'PENDING' ? `<button onclick="publishEvent(${id})">${GLYPH.ok} Опубликовать</button>` : ''}
+        ${e.state === 'PENDING' ? `<button onclick="rejectEvent(${id})">${GLYPH.reject} Отклонить</button>` : ''}
         <button onclick="openAdminEvent(${id})">${GLYPH.open} Открыть</button>
         <button onclick="openAdminComments(${id})" title="Комментарии события">${GLYPH.comm}</button>
     </div>
