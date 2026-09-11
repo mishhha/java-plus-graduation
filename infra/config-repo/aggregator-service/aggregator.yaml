@@ -15,7 +15,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
-        spring.deserializer.value.delegate.class: ru.practicum.config.AvroDeserializer
+        spring.deserializer.value.delegate.class: evm.stat.config.AvroDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: ru.practicum.config.AvroSerializer
+      value-serializer: evm.stat.config.AvroSerializer

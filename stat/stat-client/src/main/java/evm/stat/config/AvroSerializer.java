@@ -1,4 +1,4 @@
-package ru.practicum.config;
+package evm.stat.config;
 
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;

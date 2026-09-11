@@ -15,4 +15,4 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
-      value-serializer: ru.practicum.config.AvroSerializer
+      value-serializer: evm.stat.config.AvroSerializer

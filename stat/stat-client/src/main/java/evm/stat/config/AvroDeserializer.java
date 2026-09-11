@@ -1,4 +1,4 @@
-package ru.practicum.config;
+package evm.stat.config;
 
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
