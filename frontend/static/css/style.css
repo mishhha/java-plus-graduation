@@ -1,21 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root {
+    --bg-color: #000604;      /* почти чёрный, без синевы */
+    --text-color: #00ffc8;    /* зелёно-бирюзовый, как в макете №3 */
+    --border-color: #00997a;  /* приглушённый зелёный для рамок */
+    --glow: 0 0 8px rgba(0, 255, 200, 0.55);
+    --error-color: #ff2244;
+}
+
 * { box-sizing: border-box; }
-body { font-family: system-ui, sans-serif; margin: 0; background: #f5f6fa; color: #222; }
-.topbar { display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 32px; background: #2d3436; color: #fff; }
-.topbar h1 { font-size: 22px; margin: 0; }
-.topbar input { width: 70px; padding: 6px; border-radius: 6px; border: none; }
-main { padding: 24px 32px; }
-section { margin-bottom: 32px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-.card h3 { margin: 0 0 8px; font-size: 17px; }
-.annotation { color: #555; min-height: 40px; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.actions button { border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;
-    background: #0984e3; color: #fff; font-size: 13px; }
-.actions button:hover { background: #0767b3; }
-.score { color: #6c5ce7; font-weight: 600; }
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: #00b894; color: #fff; padding: 10px 20px; border-radius: 8px; z-index: 10; }
-.toast.error { background: #d63031; }
+
+body {
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    text-shadow: var(--glow);
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Шапка */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 30px;
+    background: rgba(0, 243, 255, 0.02);
+}
+.topbar h1 {
+    margin: 0;
+    font-size: 24px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.topbar label { font-size: 14px; }
+.topbar input {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    margin-left: 10px;
+    width: 80px;
+    text-shadow: var(--glow);
+}
+.topbar input:focus {
+    outline: none;
+    border-color: var(--text-color);
+    box-shadow: var(--glow);
+}
+
+/* Заголовки секций */
+h2 {
+    border-left: 4px solid var(--text-color);
+    padding-left: 15px;
+    margin-top: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Сетка карточек */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Карточка мероприятия */
+.card {
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    background: rgba(0, 243, 255, 0.03);
+    box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+    transition: all 0.3s ease;
+}
+.card:hover {
+    border-color: var(--text-color);
+    box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.15), var(--glow);
+}
+.card h3 {
+    margin-top: 0;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 8px;
+    font-size: 18px;
+}
+.annotation {
+    color: rgba(0, 255, 200, 0.6);   /* было с синим оттенком */
+}
+.score {
+    color: var(--text-color);        /* «Рекомендуем (100%)» в общей палитре */
+}
+
+/* Кнопки */
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+.actions button {
+    background: transparent;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    text-shadow: var(--glow);
+}
+.actions button:hover {
+    background: var(--text-color);
+    color: var(--bg-color);
+    box-shadow: var(--glow);
+    text-shadow: none;
+}
+
+/* Тосты (уведомления) */
+.toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-color); border: 1px solid var(--text-color);
+    color: var(--text-color); padding: 12px 24px; text-shadow: var(--glow);
+    z-index: 100; letter-spacing: 1px;
+}
+.toast.error { border-color: var(--error-color); color: var(--error-color); text-shadow: 0 0 8px var(--error-color); }
 .hidden { display: none; }
+
+/* ── Модальное окно мероприятия ── */
+.modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0, 0, 0, .85);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.modal {
+    position: relative;
+    width: min(600px, 94vw); max-height: 86vh; overflow-y: auto;
+    background: var(--bg-color, #000604);
+    border: 1px solid var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+    padding: 28px 24px 24px;
+}
+.modal-close {
+    position: absolute; top: 8px; right: 8px;
+    background: transparent;
+    border: 1px solid var(--text-color, #00ffc8);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit; font-size: 14px;
+    padding: 4px 10px; cursor: pointer;
+}
+.modal-close:hover { background: var(--text-color, #00ffc8); color: var(--bg-color, #000604); }
+.modal h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: 1px; }
+.modal-annotation { opacity: .8; }
+.modal .row {
+    display: flex; justify-content: space-between; gap: 16px;
+    padding: 6px 0; font-size: 14px;
+    border-bottom: 1px dashed var(--border-color, #00997a);
+}
+.modal .row span:first-child { opacity: .65; }
+.modal h3 { margin: 18px 0 6px; font-size: 15px; letter-spacing: 1px; }
+.modal-description { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+
+.hidden { display: none !important; }
