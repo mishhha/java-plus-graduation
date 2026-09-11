@@ -35,6 +35,7 @@
             <button id="create-event-btn" class="btn-create" type="button" onclick="openCreateModal()">[+] Создать мероприятие</button>
         </div>
         <div id="events" class="grid"></div>
+        <p id="paid-footnote" class="paid-footnote hidden">* — платный вход</p>
     </section>
 </main>
 
@@ -76,14 +77,18 @@
                     <button type="button" onclick="cancelCategory()">✕</button>
                 </div>
             </label>
-            <label>Дата и время (ГГГГ-ММ-ДД ЧЧ:мм:сс)
-                <input id="ce-date" type="text" value="2027-01-01 12:00:00">
+            <label>Дата и время
+                <div class="date-row">
+                    <input id="ce-date" type="text" placeholder="ГГГГ-ММ-ДД ЧЧ:мм:сс">
+                    <button type="button" class="date-pick-btn" onclick="toggleCalendar(event)">◷</button>
+                </div>
+                <div id="ce-calendar" class="calendar hidden"></div>
             </label>
             <label class="row-check">
                 <input id="ce-paid" type="checkbox"> Платное мероприятие
             </label>
-            <label>Лимит участников (0 = без лимита)
-                <input id="ce-limit" type="number" min="0" value="10">
+            <label>Лимит участников (0 = без лимита, макс. 50 000)
+                <input id="ce-limit" type="number" min="0" max="50000" value="10">
             </label>
             <p id="create-error" class="auth-error hidden"></p>
             <button type="submit">Создать</button>

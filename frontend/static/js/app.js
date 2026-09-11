@@ -138,7 +138,7 @@ function card(e, score) {
     return `
 <div class="card">
     <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="likeEvent(${id})" title="Лайкнуть мероприятие">${isLiked ? '♥' : '♡'}</button>
-    <h3>${title}</h3>
+    <h3>${title}${e.paid ? ' <span class="paid-mark">*</span>' : ''}</h3>
     <p class="annotation">${e.annotation || ''}</p>
     <p>${GLYPH.rating} рейтинг: ${rating}</p>
     ${scoreLine}
@@ -213,6 +213,7 @@ async function loadEvents() {
         const events = await api('/events?from=0&size=100');
         eventsCache = new Map(events.map(e => [getId(e), e]));
         $('#events').innerHTML = events.map(e => card(e)).join('') || '<p>Пока пусто</p>';
+        $('#paid-footnote').classList.toggle('hidden', !events.some(e => e.paid));
     } catch (err) {
         toast('Ошибка загрузки мероприятий: ' + err.message, true);
     }
@@ -577,10 +578,118 @@ $('#ce-category-new').addEventListener('keydown', (ev) => {
 });
 
 /* ========== Создание мероприятия ========== */
+/* ========== Календарь ========== */
+let calYear, calMonth; // текущий отображаемый месяц (0-11)
+const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+    'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WEEKDAYS = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function toggleCalendar(ev) {
+    if (ev) ev.stopPropagation();
+    const cal = $('#ce-calendar');
+    if (!cal.classList.contains('hidden')) {
+        cal.classList.add('hidden');
+        return;
+    }
+    // Инициализация: берём дату из поля или сегодня
+    const raw = $('#ce-date').value.trim();
+    const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+        calYear = parseInt(m[1], 10);
+        calMonth = parseInt(m[2], 10) - 1;
+    } else {
+        const d = new Date();
+        calYear = d.getFullYear();
+        calMonth = d.getMonth();
+    }
+    renderCalendar();
+    cal.classList.remove('hidden');
+}
+
+function renderCalendar() {
+    const cal = $('#ce-calendar');
+    const firstDay = new Date(calYear, calMonth, 1);
+    const lastDay = new Date(calYear, calMonth + 1, 0);
+    // Понедельник = 0
+    let startWeekday = firstDay.getDay() - 1;
+    if (startWeekday < 0) startWeekday = 6;
+    const totalDays = lastDay.getDate();
+
+    // Выбранный день из поля
+    const raw = $('#ce-date').value.trim();
+    const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const selDay = m && parseInt(m[1],10)===calYear && (parseInt(m[2],10)-1)===calMonth
+        ? parseInt(m[3],10) : null;
+
+    const today = new Date();
+    const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+
+    let html = `
+        <div class="cal-head">
+            <button type="button" class="cal-nav" onclick="calPrev()">‹</button>
+            <span class="cal-title">${MONTHS[calMonth]} ${calYear}</span>
+            <button type="button" class="cal-nav" onclick="calNext()">›</button>
+        </div>
+        <div class="cal-grid cal-weekdays">
+            ${WEEKDAYS.map(d => `<span>${d}</span>`).join('')}
+        </div>
+        <div class="cal-grid cal-days">`;
+
+    // Пустые ячейки до первого дня
+    for (let i = 0; i < startWeekday; i++) html += `<span class="cal-empty"></span>`;
+
+    for (let d = 1; d <= totalDays; d++) {
+        const isToday = calYear === todayY && calMonth === todayM && d === todayD;
+        const isSelected = d === selDay;
+        const classes = ['cal-day'];
+        if (isToday) classes.push('today');
+        if (isSelected) classes.push('selected');
+        html += `<span class="${classes.join(' ')}" onclick="selectCalDay(${d})">${d}</span>`;
+    }
+    html += `</div>`;
+    cal.innerHTML = html;
+}
+
+window.calPrev = function() {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+};
+
+window.calNext = function() {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+};
+
+function selectCalDay(d) {
+    const mm = String(calMonth + 1).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    // Сохраняем время из поля, если оно валидное, иначе 12:00:00
+    const raw = $('#ce-date').value.trim();
+    const timeMatch = raw.match(/(\d{2}:\d{2}:\d{2})$/);
+    const time = timeMatch ? timeMatch[1] : '12:00:00';
+    $('#ce-date').value = `${calYear}-${mm}-${dd} ${time}`;
+    $('#ce-calendar').classList.add('hidden');
+}
+
 function openCreateModal() {
     loadCategories();
     if (isGuest()) { requireAuth(); return; }
     hideCreateError();
+
+    if (!$('#ce-date').value) {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        $('#ce-date').value = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+    }
+
     $('#create-overlay').classList.remove('hidden');
 }
 function closeCreateModal() {
@@ -673,6 +782,15 @@ function captureRole() {
 }
 
 /* ========== Слушатели ========== */
+// Закрытие календаря по клику вне
+document.addEventListener('click', (ev) => {
+    const cal = $('#ce-calendar');
+    if (!cal) return;
+    if (!ev.target.closest('#ce-calendar') && !ev.target.closest('.date-pick-btn')) {
+        cal.classList.add('hidden');
+    }
+});
+
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -698,10 +816,12 @@ $('#cookie-retry').addEventListener('click', () => {
     $('#access-denied').classList.add('hidden');
     $('#cookie-overlay').classList.remove('hidden');
 });
-document.addEventListener('click', (ev) => {
-    if (!ev.target.closest('.comment-menu') && !ev.target.closest('.comment-menu-btn')) {
-        closeAllCommentMenus();
-    }
+document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    const cal = $('#ce-calendar');
+    if (cal && !cal.classList.contains('hidden')) { cal.classList.add('hidden'); return; }
+    if (!$('#create-overlay').classList.contains('hidden')) { closeCreateModal(); return; }
+    if (!$('#modal-overlay').classList.contains('hidden')) { closeModal(); return; }
 });
 
 $('#auth-close').addEventListener('click', closeAuth);
@@ -756,6 +876,10 @@ $('#create-event-form').addEventListener('submit', async (ev) => {
     if (body.title.length < 3) { showCreateError('Название — минимум 3 символа'); return; }
     if (body.annotation.length < 20 || body.description.length < 20) {
         showCreateError('Аннотация и описание — минимум 20 символов'); return;
+    }
+    if (body.participantLimit > 50000) {
+        showCreateError('Лимит участников не может превышать 50 000');
+        return;
     }
     try {
         await api(`/users/${currentUserId}/events`, { method: 'POST', body: JSON.stringify(body) });

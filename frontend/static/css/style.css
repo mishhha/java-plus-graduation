@@ -441,7 +441,35 @@ h2 {
 }
 .auth-box textarea:focus { outline: none; border-color: var(--text-color, #00ffc8); box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55)); }
 .row-check { display: flex; align-items: center; gap: 8px; }
-.row-check input { width: auto; margin: 0; }
+/* ── Терминальный чекбокс «Платное мероприятие» ── */
+.row-check input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1px solid var(--border-color, #00997a);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+.row-check input:checked {
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.row-check input:checked::after {
+    content: "✓";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color, #00ffc8);
+    font-size: 13px;
+    line-height: 1;
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
 #section-my h2 + .grid + h2 { margin-top: 24px; }
 
 .cat-row { display: flex; gap: 8px; margin-top: 4px; }
@@ -836,4 +864,134 @@ h2 {
 /* отступ сверху только у кнопки отправки в основной форме (прямой ребёнок form) */
 .comment-form > .comment-submit {
     margin-top: 8px;
+}
+
+/* ── Фикс: «Платное мероприятие» в одну строку с чекбоксом ── */
+.auth-box label.row-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+.auth-box label.row-check input {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+/* ── Календарь-пикер ── */
+.date-row { display: flex; gap: 8px; margin-top: 4px; }
+.date-row input { flex: 1; }
+.date-pick-btn {
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 16px;
+    padding: 8px 12px;
+    cursor: pointer;
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.date-pick-btn:hover {
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.calendar {
+    position: absolute;
+    z-index: 10;
+    margin-top: 6px;
+    width: 280px;
+    background: var(--bg-color, #000604);
+    border: 1px solid var(--text-color, #00ffc8);
+    box-shadow: 0 0 16px rgba(0, 255, 200, .35);
+    padding: 12px;
+}
+.cal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.cal-nav {
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 16px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.cal-nav:hover {
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.cal-title {
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+.cal-weekdays span {
+    text-align: center;
+    font-size: 11px;
+    color: var(--border-color, #00997a);
+    padding: 4px 0;
+    letter-spacing: 1px;
+}
+.cal-day, .cal-empty {
+    text-align: center;
+    padding: 6px 0;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+.cal-day:hover {
+    border-color: var(--text-color, #00ffc8);
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.cal-day.today {
+    color: #ffcc00;
+    text-shadow: 0 0 6px rgba(255, 204, 0, .5);
+}
+.cal-day.selected {
+    background: var(--text-color, #00ffc8);
+    color: var(--bg-color, #000604);
+    text-shadow: none;
+    font-weight: bold;
+}
+
+/* ── Убираем стрелки у input type="number" (Chrome, Safari, Edge, Opera) ── */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ── Убираем стрелки у input type="number" (Firefox) ── */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ── Сноска о платных мероприятиях ── */
+.paid-footnote {
+    font-size: 12px;
+    color: var(--border-color, #00997a);
+    margin-top: 16px;
+    letter-spacing: 1px;
+}
+
+/* ── Звёздочка у платных мероприятий в карточке ── */
+.paid-mark {
+    color: var(--border-color, #00997a);
+    font-weight: normal;
+    letter-spacing: 0;
+    text-shadow: none;
 }
