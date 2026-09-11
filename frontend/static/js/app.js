@@ -113,13 +113,17 @@ function card(e, score) {
 
 function createdCard(e) {
     const id = getId(e);
+    const limit = e.participantLimit ?? 0;
+    const confirmed = e.confirmedRequests ?? 0;
+    const stateLine = STATE_LABEL[e.state] || e.state || '—';
     return `
 <div class="card">
     <h3>${e.title || `Мероприятие #${id}`}</h3>
     <p class="annotation">${e.annotation || ''}</p>
-    <p> Статус: ${e.state || '—'} ·  рейтинг: ${e.rating ?? 0}</p>
+    <p>${stateLine}</p>
+    <p>Участники: <span class="mono">${progressBar(confirmed, limit)}</span></p>
     <div class="actions">
-        <button onclick="openMyEvent(${id})"> Открыть</button>
+        <button onclick="openMyEvent(${id})">Открыть</button>
     </div>
 </div>`;
 }
@@ -212,8 +216,12 @@ async function loadMy() {
     if (isGuest()) { $('#my-created').innerHTML = ''; $('#my-events').innerHTML = ''; return; }
     try {
         const mine = await api(`/users/${currentUserId}/events?from=0&size=50`);
-        $('#my-created').innerHTML = (mine && mine.length)
-            ? mine.map(createdCard).join('')
+        // догружаем полные версии (state, confirmedRequests, participantLimit) параллельно
+        const full = await Promise.all((mine || []).map(e =>
+            api(`/users/${currentUserId}/events/${getId(e)}`).catch(() => e)
+        ));
+        $('#my-created').innerHTML = full.length
+            ? full.map(createdCard).join('')
             : '<p>У вас пока нет созданных мероприятий</p>';
     } catch (e) {
         $('#my-created').innerHTML = '<p>Не удалось загрузить мои события</p>';
