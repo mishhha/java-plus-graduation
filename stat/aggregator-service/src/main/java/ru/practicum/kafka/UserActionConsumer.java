@@ -23,7 +23,7 @@ import java.util.Map;
 public class UserActionConsumer {
 
     private final SimilarityStateManager stateManager;
-    private final KafkaTemplate<String, byte[]> kafkaTemplate;
+    private final KafkaTemplate<String, EventSimilarityAvro> kafkaTemplate;
 
     @KafkaListener(topics = "stats.user-actions.v1", groupId = "aggregator-group")
     public void listen(UserActionAvro message) {
@@ -84,18 +84,9 @@ public class UserActionConsumer {
                 .setTimestamp(Instant.ofEpochMilli(timestamp))
                 .build();
 
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            SpecificDatumWriter<EventSimilarityAvro> writer = new SpecificDatumWriter<>(similarityAvro.getSchema());
-            BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-            writer.write(similarityAvro, encoder);
-            encoder.flush();
+        String key = eventA + "_" + eventB;
 
-            String key = eventA + "_" + eventB;
-            kafkaTemplate.send("stats.events-similarity.v1", key, out.toByteArray());
-            log.debug("Отправлено сходство: A={}, B={}, score={}", eventA, eventB, score);
-        } catch (IOException e) {
-            log.error("Ошибка сериализации EventSimilarityAvro", e);
-        }
+        kafkaTemplate.send("stats.events-similarity.v1", key, similarityAvro);
+        log.debug("Отправлено сходство: A={}, B={}, score={}", eventA, eventB, score);
     }
 }
