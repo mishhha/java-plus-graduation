@@ -10,8 +10,8 @@
 <header class="topbar">
     <h1> Explore With Me</h1>
     <div class="user-badge">
-        <span id="user-label">Вход…</span>
-        <button id="user-reset" title="Войти как новый пользователь">↺ новый пользователь</button>
+        <span id="user-label">Гость</span>
+        <button id="user-logout" type="button">🔑 Войти</button>
     </div>
 </header>
 
@@ -61,6 +61,28 @@
             Без согласия на обработку cookie использование сайта невозможно.</p>
         <div class="cookie-actions">
             <button id="cookie-retry" class="btn-accept">↺ Пересмотреть решение</button>
+        </div>
+    </div>
+</div>
+
+<div id="auth-overlay" class="auth-overlay hidden">
+    <div class="auth-box">
+        <button type="button" id="auth-close" class="auth-close" title="Закрыть и продолжить как гость">✕</button>
+        <h2>&gt; Регистрация_</h2>
+        <form id="register-form" novalidate>
+            <label>Имя
+                <input id="reg-name" type="text" maxlength="50" placeholder="Иван" autocomplete="name">
+            </label>
+            <label>Email
+                <input id="reg-email" type="email" maxlength="50" placeholder="ivan@ewm.ru" autocomplete="email">
+            </label>
+            <p id="auth-error" class="auth-error hidden"></p>
+            <button type="submit">Создать аккаунт</button>
+        </form>
+        <div class="auth-alt">
+            <span>Уже есть аккаунт?</span>
+            <input id="login-id" type="number" min="1" placeholder="ID">
+            <button id="login-btn" type="button">Войти по ID</button>
         </div>
     </div>
 </div>
