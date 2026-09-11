@@ -205,3 +205,20 @@ h2 {
     40%  { transform: scale(1.4); }
     100% { transform: scale(1); }
 }
+
+/* ── Бейдж пользователя в шапке ── */
+.user-badge { display: flex; align-items: center; gap: 12px; }
+#user-label { font-size: 14px; letter-spacing: 1px; }
+#user-reset {
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+#user-reset:hover {
+    border-color: var(--text-color, #00ffc8);
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}

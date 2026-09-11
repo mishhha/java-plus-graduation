@@ -1,6 +1,52 @@
 const $ = (s) => document.querySelector(s);
-const userId = () => $('#user-id').value;
 const getId = (x) => x.id ?? x.eventId;
+
+/* ── Текущий пользователь живёт в cookie ── */
+let currentUserId = null;
+const userId = () => currentUserId;
+
+function getCookie(name) {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : null;
+}
+
+function setCookie(name, value, days) {
+    const d = new Date(Date.now() + days * 86400000).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d}; path=/`;
+}
+
+function deleteCookie(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+}
+
+async function createGuestUser() {
+    const rnd = Math.random().toString(36).slice(2, 8);
+    return api('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify({ name: `Guest ${rnd}`, email: `guest_${rnd}@ewm.local` }),
+    });
+}
+
+async function ensureUser() {
+    const stored = getCookie('ewm_user_id');
+    if (stored) return Number(stored);   // постоянный посетитель
+    const user = await createGuestUser(); // первый визит — создаём гостя
+    setCookie('ewm_user_id', user.id, 365);
+    return user.id;
+}
+
+function renderUserBadge() {
+    $('#user-label').textContent = `Вы — пользователь #${currentUserId}`;
+}
+
+async function resetUser() {
+    deleteCookie('ewm_user_id');
+    currentUserId = await ensureUser();
+    renderUserBadge();
+    toast('Вы вошли как новый пользователь 👤');
+    refresh();
+}
+
 const liked = new Set(); // id мероприятий, лайкнутых в этой сессии
 
 let eventsCache = new Map(); // id -> мероприятие (для обогащения рекомендаций)
@@ -10,7 +56,7 @@ async function api(path, options = {}) {
         ...options,
         headers: {
             'Content-Type': 'application/json',
-            'X-EWM-USER-ID': userId(),
+            ...(userId() != null ? { 'X-EWM-USER-ID': userId() } : {}),
             ...(options.headers || {}),
         },
     });
@@ -131,8 +177,17 @@ function closeModal() {
     refresh(); // после закрытия обновляем списки (рейтинг мог измениться)
 }
 
-$('#user-id').addEventListener('change', refresh);
-refresh();
+$('#user-reset').addEventListener('click', resetUser);
+
+(async function init() {
+    try {
+        currentUserId = await ensureUser();
+        renderUserBadge();
+        refresh();
+    } catch (e) {
+        toast('Не удалось войти: ' + e.message, true);
+    }
+})();
 
 $('#modal-overlay').addEventListener('click', (ev) => {
     if (ev.target.id === 'modal-overlay') closeModal();
