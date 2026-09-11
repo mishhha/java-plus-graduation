@@ -230,6 +230,7 @@ services:
       discovery-server:
         condition: service_healthy
     environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - SPRING_DATASOURCE_USERNAME=stat
       - SPRING_DATASOURCE_PASSWORD=stat
@@ -245,6 +246,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
 
   analyzer-service:
     build: stat/analyzer-service
@@ -260,8 +263,20 @@ services:
       stats-db:
         condition: service_healthy
     environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - SPRING_DATASOURCE_USERNAME=stat
       - SPRING_DATASOURCE_PASSWORD=stat
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_SQL_INIT_MODE=never
+
+  frontend:
+    build: ./frontend
+    container_name: ewm-frontend
+    ports:
+      - "3000:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./frontend/static:/usr/share/nginx/html:ro
+    restart: unless-stopped

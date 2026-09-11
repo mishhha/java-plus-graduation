@@ -1,0 +1,21 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; background: #f5f6fa; color: #222; }
+.topbar { display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 32px; background: #2d3436; color: #fff; }
+.topbar h1 { font-size: 22px; margin: 0; }
+.topbar input { width: 70px; padding: 6px; border-radius: 6px; border: none; }
+main { padding: 24px 32px; }
+section { margin-bottom: 32px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.card h3 { margin: 0 0 8px; font-size: 17px; }
+.annotation { color: #555; min-height: 40px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions button { border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;
+    background: #0984e3; color: #fff; font-size: 13px; }
+.actions button:hover { background: #0767b3; }
+.score { color: #6c5ce7; font-weight: 600; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #00b894; color: #fff; padding: 10px 20px; border-radius: 8px; z-index: 10; }
+.toast.error { background: #d63031; }
+.hidden { display: none; }
