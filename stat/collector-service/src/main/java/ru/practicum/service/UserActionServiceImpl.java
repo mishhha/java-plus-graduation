@@ -19,7 +19,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class UserActionServiceImpl extends UserActionControllerGrpc.UserActionControllerImplBase {
 
-    private final KafkaTemplate<String, UserActionAvro> kafkaTemplate;
+    private final KafkaTemplate<Long, UserActionAvro> kafkaTemplate;
 
     @Override
     public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
@@ -37,7 +37,7 @@ public class UserActionServiceImpl extends UserActionControllerGrpc.UserActionCo
                 .setTimestamp(Instant.ofEpochMilli(timestampMs))
                 .build();
 
-        kafkaTemplate.send("stats.user-actions.v1", String.valueOf(request.getUserId()), avroMessage);
+        kafkaTemplate.send("stats.user-actions.v1", request.getUserId(), avroMessage);
         log.info("Сообщение успешно отправлено в Kafka");
 
         responseObserver.onNext(Empty.getDefaultInstance());
