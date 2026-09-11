@@ -275,14 +275,16 @@ async function refresh() {
 }
 
 /* ========== Модалка карточки мероприятия ========== */
-function openModal(e) {
+function openModal(e, activeTab = 'details') {
     const date = (e.eventDate || '').replace('T', ' ');
-    $('#modal-body').innerHTML = `
+
+    // Вкладка "Детали"
+    $('#tab-details').innerHTML = `
         <h2>${e.title || ''}</h2>
         <p class="modal-annotation">${e.annotation || ''}</p>
         <div class="row"><span>Категория</span><span>${e.category?.name || '—'}</span></div>
         <div class="row"><span>Дата и время</span><span>${date}</span></div>
-        <div class="row"><span>Рейтинг</span><span>⭐ ${e.rating ?? 0}</span></div>
+        <div class="row"><span>Рейтинг</span><span>★ ${e.rating ?? 0}</span></div>
         <div class="row"><span>Вход</span><span>${e.paid ? 'Платный' : 'Бесплатный'}</span></div>
         <div class="row"><span>Лимит участников</span><span>${e.participantLimit ? e.participantLimit : 'без лимита'}</span></div>
         <div class="row"><span>Координаты</span><span>${e.location ? e.location.lat + ', ' + e.location.lon : '—'}</span></div>
@@ -290,8 +292,19 @@ function openModal(e) {
         <h3>＞ Описание</h3>
         <p class="modal-description">${e.description || ''}</p>
     `;
+
+    // Вкладка "Комментарии" (пока заглушка, реализуем на Шаге 3)
+    $('#tab-comments').innerHTML = '<p>Комментариев пока нет</p>';
+
+    // Активируем нужную вкладку
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[data-tab="${activeTab}"]`).classList.add('active');
+    $('#tab-details').classList.toggle('hidden', activeTab !== 'details');
+    $('#tab-comments').classList.toggle('hidden', activeTab !== 'comments');
+
     $('#modal-overlay').classList.remove('hidden');
 }
+
 function closeModal() {
     $('#modal-overlay').classList.add('hidden');
     refresh();
@@ -308,9 +321,12 @@ async function viewEvent(id) {
 }
 
 async function openEventComments(id) {
-    // Шаг 1: заглушка — просто открываем модалку деталей.
-    // В Шаге 2 переключимся на вкладку «// Комментарии».
-    await viewEvent(id);
+    if (isGuest()) { requireAuth(); return; }
+    try {
+        const event = await api(`/events/${id}`);
+        openModal(event, 'comments'); // сразу на вкладку комментариев
+        toast('Просмотр засчитан ◉');
+    } catch (e) { toast(e.message, true); }
 }
 
 async function registerEvent(id) {
@@ -473,6 +489,16 @@ function captureRole() {
 }
 
 /* ========== Слушатели ========== */
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        $('#tab-details').classList.toggle('hidden', target !== 'details');
+        $('#tab-comments').classList.toggle('hidden', target !== 'comments');
+    });
+});
+
 $('#cookie-accept').addEventListener('click', () => {
     localStorage.setItem(CONSENT_KEY, 'accepted');
     $('#cookie-overlay').classList.add('hidden');
