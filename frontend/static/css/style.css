@@ -478,3 +478,9 @@ h2 {
     border-color: var(--text-color, #00ffc8);
     box-shadow: 0 0 10px rgba(0, 255, 200, .35);
 }
+
+/* ── Кабинет организатора: статусы и прогресс-бар ── */
+.mono { letter-spacing: 1px; }
+.state-pending   { color: #ffcc00; text-shadow: 0 0 8px rgba(255, 204, 0, .5); }
+.state-published { color: #00ff88; text-shadow: 0 0 8px rgba(0, 255, 136, .5); }
+.state-canceled  { color: #ff2244; text-shadow: 0 0 8px rgba(255, 34, 68, .5); }

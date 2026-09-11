@@ -115,8 +115,56 @@ function createdCard(e) {
 <div class="card">
     <h3>${e.title || `Мероприятие #${id}`}</h3>
     <p class="annotation">${e.annotation || ''}</p>
-    <p>📝 Статус: ${e.state || '—'} · ⭐ рейтинг: ${e.rating ?? 0}</p>
+    <p> Статус: ${e.state || '—'} ·  рейтинг: ${e.rating ?? 0}</p>
+    <div class="actions">
+        <button onclick="openMyEvent(${id})"> Открыть</button>
+    </div>
 </div>`;
+}
+
+/* ========== Кабинет организатора ========== */
+const STATE_LABEL = {
+    PENDING:  ' Ожидает модерации',
+    PUBLISHED:' Опубликовано',
+    CANCELED: ' Отменено',
+};
+
+function progressBar(filled, total) {
+    if (!total) return '[ без лимита ]';
+    const width = 12;
+    const done = Math.round((Math.min(filled, total) / total) * width);
+    return '[' + '█'.repeat(done) + '░'.repeat(width - done) + '] ' + filled + '/' + total;
+}
+
+async function openMyEvent(id) {
+    if (isGuest()) { requireAuth(); return; }
+    let e;
+    try {
+        e = await api(`/users/${currentUserId}/events/${id}`); // владелец: state + confirmedRequests
+    } catch (err) {
+        try { e = await api(`/events/${id}`); }                // фолбэк: публичная карточка
+        catch (e2) { toast(e2.message, true); return; }
+    }
+    renderMyEventModal(e);
+}
+
+function renderMyEventModal(e) {
+    const limit = e.participantLimit ?? 0;
+    const confirmed = e.confirmedRequests ?? 0;
+    $('#modal-body').innerHTML = `
+        <h2>${e.title || ''}</h2>
+        <p class="modal-annotation">${e.annotation || ''}</p>
+        <div class="row"><span>Статус модерации</span><span class="state-${(e.state || '').toLowerCase()}">${STATE_LABEL[e.state] || e.state || '—'}</span></div>
+        <div class="row"><span>Участники</span><span class="mono">${progressBar(confirmed, limit)}</span></div>
+        <div class="row"><span>Подтверждено</span><span>${confirmed}</span></div>
+        <div class="row"><span>Лимит</span><span>${limit ? limit : 'без лимита'}</span></div>
+        <div class="row"><span>Категория</span><span>${e.category?.name || '—'}</span></div>
+        <div class="row"><span>Дата и время</span><span>${(e.eventDate || '').replace('T', ' ')}</span></div>
+        <div class="row"><span>Рейтинг</span><span>⭐ ${e.rating ?? 0}</span></div>
+        <h3>＞ Описание</h3>
+        <p class="modal-description">${e.description || ''}</p>
+    `;
+    $('#modal-overlay').classList.remove('hidden');
 }
 
 function requestCard(r) {
