@@ -11,6 +11,36 @@ let eventsCache = new Map();   // id -> мероприятие
 
 const CONSENT_KEY = 'ewm_cookie_consent';
 
+/* ========== Фирменные терминальные глифы (для нового функционала) ========== */
+const GLYPH = {
+    view:   '◉',    // просмотр
+    ok:     '✓',    // одобрить / записаться / опубликовать
+    reject: '✕',    // отклонить / отменить
+    like:   '♥',    // лайк (нажат)
+    like0:  '♡',    // лайк (не нажат)
+    rating: '★',    // рейтинг
+    rec:    '»',    // рекомендация
+    my:     '▣',    // мои события
+    req:    '▤',    // мои участия
+    list:   '▦',    // список мероприятий
+    open:   '◈',    // открыть детали
+    admin:  '#',    // роль админа
+    user:   '○',    // роль пользователя
+    login:  '>',    // вход
+    date:   '◷',    // дата и время
+    crowd:  '∑',    // участники
+    state:  '●',    // статус
+    create: '[+]',  // создать
+    info:   '[i]',  // информация
+    denied: '[!]',  // доступ запрещён
+    wait:   '…',    // ожидание модерации
+    yes:    '[Y]',  // да
+    no:     '[N]',  // нет
+    comm:   '//',   // комментарии (значок на карточке)
+    edit:   '✎',    // редактировать
+    del:    '✕',    // удалить (reuse существующего символа, но для контекста комментариев)
+};
+
 /* ========== Cookie ========== */
 function getCookie(name) {
     const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
@@ -106,7 +136,8 @@ function card(e, score) {
     ${scoreLine}
     <div class="actions">
         <button onclick="viewEvent(${id})">👁 Просмотр</button>
-        <button onclick="registerEvent(${id})">✅ Записаться</button>
+        <button onclick="registerEvent(${id})">${GLYPH.ok} Записаться</button>
+        <button onclick="openEventComments(${id})">${GLYPH.comm}</button>
     </div>
 </div>`;
 }
@@ -274,6 +305,12 @@ async function viewEvent(id) {
         openModal(event);
         toast('Просмотр засчитан 👀');
     } catch (e) { toast(e.message, true); }
+}
+
+async function openEventComments(id) {
+    // Шаг 1: заглушка — просто открываем модалку деталей.
+    // В Шаге 2 переключимся на вкладку «// Комментарии».
+    await viewEvent(id);
 }
 
 async function registerEvent(id) {
