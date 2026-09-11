@@ -21,7 +21,7 @@ public class UserActionConsumer {
     public void listen(UserActionAvro message) {
         Long userId = message.getUserId();
         Long eventId = message.getEventId();
-        Long timestamp = message.getTimestamp();
+        Long timestamp = message.getTimestamp().toEpochMilli();
 
         double newWeight = getWeight(message.getActionType());
 

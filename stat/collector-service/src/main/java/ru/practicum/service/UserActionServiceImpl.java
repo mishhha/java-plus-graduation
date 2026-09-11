@@ -12,6 +12,8 @@ import ru.practicum.ewm.stats.proto.collector.ActionTypeProto;
 import ru.practicum.ewm.stats.proto.collector.UserActionControllerGrpc;
 import ru.practicum.ewm.stats.proto.collector.UserActionProto;
 
+import java.time.Instant;
+
 @Slf4j
 @GrpcService
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class UserActionServiceImpl extends UserActionControllerGrpc.UserActionCo
                 .setUserId(request.getUserId())
                 .setEventId(request.getEventId())
                 .setActionType(avroActionType)
-                .setTimestamp(timestampMs)
+                .setTimestamp(Instant.ofEpochMilli(timestampMs))
                 .build();
 
         kafkaTemplate.send("stats.user-actions.v1", String.valueOf(request.getUserId()), avroMessage);

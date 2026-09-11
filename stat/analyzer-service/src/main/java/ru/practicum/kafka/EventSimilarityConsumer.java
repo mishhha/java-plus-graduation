@@ -22,7 +22,7 @@ public class EventSimilarityConsumer {
         Long eventA = message.getEventA();
         Long eventB = message.getEventB();
         Double score = message.getScore();
-        Long timestamp = message.getTimestamp();
+        Long timestamp = message.getTimestamp().toEpochMilli();
 
         log.debug("Получено сходство: eventA={}, eventB={}, score={}", eventA, eventB, score);
 

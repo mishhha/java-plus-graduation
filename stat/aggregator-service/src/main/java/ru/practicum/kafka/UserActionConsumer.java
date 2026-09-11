@@ -14,6 +14,7 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 @Slf4j
@@ -69,7 +70,7 @@ public class UserActionConsumer {
                     long eventA = Math.min(currentEventId, otherEventId);
                     long eventB = Math.max(currentEventId, otherEventId);
 
-                    sendSimilarity(eventA, eventB, similarity, message.getTimestamp());
+                    sendSimilarity(eventA, eventB, similarity, message.getTimestamp().toEpochMilli());
                 }
             }
         }
@@ -80,7 +81,7 @@ public class UserActionConsumer {
                 .setEventA(eventA)
                 .setEventB(eventB)
                 .setScore(score)
-                .setTimestamp(timestamp)
+                .setTimestamp(Instant.ofEpochMilli(timestamp))
                 .build();
 
         try {
