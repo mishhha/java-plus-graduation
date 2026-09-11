@@ -61,7 +61,7 @@ function renderUserBadge() {
     const btn = $('#user-logout');
     if (isGuest()) {
         label.textContent = 'Гость';
-        btn.textContent = '🔑 Войти';
+        btn.textContent = 'Войти';
         btn.title = 'Войти или зарегистрироваться';
         btn.onclick = () => { hideAuthError(); showAuthOverlay(); };
     } else {
@@ -237,8 +237,52 @@ async function likeEvent(id) {
     } catch (e) { toast('Лайк не прошёл: ' + e.message, true); }
 }
 
+async function loadCategories() {
+    const sel = $('#ce-category');
+    try {
+        const cats = await api('/categories?from=0&size=100');
+        sel.innerHTML = cats.length
+            ? cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+            : '<option value="">— нет категорий —</option>';
+    } catch (e) {
+        sel.innerHTML = '<option value="">— не удалось загрузить —</option>';
+    }
+}
+
+function openCategoryInput() {
+    $('#cat-new-row').classList.remove('hidden');
+    $('#ce-category-new').value = '';
+    $('#ce-category-new').focus();
+}
+
+function cancelCategory() {
+    $('#cat-new-row').classList.add('hidden');
+}
+
+async function submitCategory() {
+    const name = $('#ce-category-new').value.trim();
+    if (!name) { showCreateError('Введите название категории'); return; }
+    try {
+        const cat = await api('/admin/categories', {
+            method: 'POST',
+            body: JSON.stringify({ name }),
+        });
+        toast('Категория создана ✅');
+        await loadCategories();
+        $('#ce-category').value = cat.id;   // сразу выбираем новую категорию
+        cancelCategory();
+    } catch (e) {
+        showCreateError('Не удалось создать категорию: ' + e.message);
+    }
+}
+
+$('#ce-category-new').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); submitCategory(); }
+});
+
 /* ========== Создание мероприятия ========== */
 function openCreateModal() {
+    loadCategories();
     if (isGuest()) { requireAuth(); return; }
     hideCreateError();
     $('#create-overlay').classList.remove('hidden');
@@ -374,13 +418,17 @@ $('#create-event-form').addEventListener('submit', async (ev) => {
         title: $('#ce-title').value.trim(),
         annotation: $('#ce-annotation').value.trim(),
         description: $('#ce-description').value.trim(),
-        category: Number($('#ce-category').value),
+        category: Number($('#ce-category').value) || null,
         eventDate: $('#ce-date').value.trim(),
         location: { lat: 55.75, lon: 37.62 },
         paid: $('#ce-paid').checked,
         participantLimit: Number($('#ce-limit').value),
         requestModeration: false,
     };
+    if (!$('#ce-category').value) {
+        showCreateError('Сначала создайте категорию (кнопка ➕ Новая)');
+        return;
+    }
     if (body.title.length < 3) { showCreateError('Название — минимум 3 символа'); return; }
     if (body.annotation.length < 20 || body.description.length < 20) {
         showCreateError('Аннотация и описание — минимум 20 символов'); return;

@@ -442,3 +442,39 @@ h2 {
 .row-check { display: flex; align-items: center; gap: 8px; }
 .row-check input { width: auto; margin: 0; }
 #section-my h2 + .grid + h2 { margin-top: 24px; }
+
+.cat-row { display: flex; gap: 8px; margin-top: 4px; }
+.cat-row select {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 10px;
+}
+.cat-row select option { background: #001a12; color: var(--text-color, #00ffc8); }
+.cat-row button {
+    background: transparent;
+    border: 1px solid var(--text-color, #00ffc8);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.cat-row button:hover { background: var(--text-color, #00ffc8); color: var(--bg-color, #000604); }
+
+.cat-row input {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit; font-size: 14px;
+    padding: 8px 10px;
+}
+.cat-row input:focus {
+    outline: none;
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: 0 0 10px rgba(0, 255, 200, .35);
+}

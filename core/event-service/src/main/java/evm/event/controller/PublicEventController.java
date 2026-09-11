@@ -68,7 +68,7 @@ public class PublicEventController {
 
     @GetMapping("/recommendations")
     public List<RecommendedEventDto> getRecommendations(
-            @RequestParam Long userId,
+            @RequestHeader("X-EWM-USER-ID") Long userId,
             @RequestParam(defaultValue = "10") int maxResults) {
 
         log.info("GET /events/recommendations для userId={}", userId);
@@ -79,7 +79,7 @@ public class PublicEventController {
     @GetMapping("/{id}/similar")
     public List<RecommendedEventDto> getSimilarEvents(
             @PathVariable Long id,
-            @RequestParam Long userId,
+            @RequestHeader("X-EWM-USER-ID") Long userId,
             @RequestParam(defaultValue = "10") int maxResults) {
 
         log.info("GET /events/{}/similar для userId={}", id, userId);

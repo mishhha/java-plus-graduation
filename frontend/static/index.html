@@ -59,8 +59,16 @@
             <label>Описание (полное)
                 <textarea id="ce-description" rows="4" placeholder="Что интересного на мероприятии"></textarea>
             </label>
-            <label>ID категории
-                <input id="ce-category" type="number" min="1" value="1">
+            <label>Категория
+                <div class="cat-row">
+                    <select id="ce-category"></select>
+                    <button type="button" onclick="openCategoryInput()">➕ Новая</button>
+                </div>
+                <div id="cat-new-row" class="cat-row hidden">
+                    <input id="ce-category-new" type="text" maxlength="50" placeholder="Название категории">
+                    <button type="button" onclick="submitCategory()">✔ Создать</button>
+                    <button type="button" onclick="cancelCategory()">✖</button>
+                </div>
             </label>
             <label>Дата и время (ГГГГ-ММ-ДД ЧЧ:мм:сс)
                 <input id="ce-date" type="text" value="2027-01-01 12:00:00">
