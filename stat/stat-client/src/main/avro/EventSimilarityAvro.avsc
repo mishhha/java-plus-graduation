@@ -3,9 +3,24 @@
   "name": "EventSimilarityAvro",
   "namespace": "ru.practicum.ewm.stats.avro",
   "fields": [
-    { "name": "eventA", "type": "long" },
-    { "name": "eventB", "type": "long" },
-    { "name": "score", "type": "double" },
-    { "name": "timestamp", "type": "long", "logicalType": "timestamp-millis" }
+    {
+      "name": "eventA",
+      "type": "long"
+    },
+    {
+      "name": "eventB",
+      "type": "long"
+    },
+    {
+      "name": "score",
+      "type": "double"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    }
   ]
 }
