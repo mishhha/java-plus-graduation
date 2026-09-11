@@ -65,7 +65,8 @@ function renderUserBadge() {
         btn.title = 'Войти или зарегистрироваться';
         btn.onclick = () => { hideAuthError(); showAuthOverlay(); };
     } else {
-        label.textContent = `Вы — ${currentUserName || 'пользователь #' + currentUserId}`;
+        const suffix = currentRole === 'admin' ? ' (админ)' : '';
+        label.textContent = `Вы — ${currentUserName || 'пользователь #' + currentUserId}${suffix}`;
         btn.textContent = '⎋ Выйти';
         btn.title = 'Выйти и войти под другим пользователем';
         btn.onclick = logout;
@@ -78,6 +79,7 @@ function applyAccessRules() {
     $('#section-recommendations').classList.toggle('hidden', guest);
     $('#section-my').classList.toggle('hidden', guest);
     $('#create-event-btn').classList.toggle('hidden', guest);
+    $('#admin-link').classList.toggle('hidden', !(currentRole === 'admin' && !guest));
 }
 
 function requireAuth() {
@@ -174,7 +176,7 @@ function requestCard(r) {
 <div class="card">
     <h3>${ev.title || `Мероприятие #${id}`}</h3>
     <p class="annotation">${ev.annotation || ''}</p>
-    <p>📌 Статус участия: ${r.status || '—'}</p>
+    <p> Статус участия: ${r.status || '—'}</p>
     <div class="actions">
         <button onclick="viewEvent(${id})">👁 Просмотр</button>
     </div>
@@ -391,14 +393,17 @@ function closeAuth() {
 function logout() {
     deleteCookie('ewm_user_id');
     deleteCookie('ewm_user_name');
+    deleteCookie('ewm_role');
     currentUserId = null;
     currentUserName = null;
+    currentRole = 'user';
     liked.clear();
     showAuthOverlay();
     refresh();
 }
 
 async function boot() {
+    currentRole = getCookie('ewm_role') || 'user';
     const stored = getCookie('ewm_user_id');
     if (stored) {
         currentUserId = Number(stored);
@@ -411,6 +416,15 @@ async function boot() {
         showAuthOverlay();
         refresh();
     }
+}
+
+/* ========== Роль ========== */
+let currentRole = 'user';
+
+function captureRole() {
+    const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
+    setCookie('ewm_role', role, 365);
+    return role;
 }
 
 /* ========== Слушатели ========== */
@@ -442,6 +456,7 @@ $('#register-form').addEventListener('submit', async (ev) => {
     try {
         currentUserId = await registerUser(name, email);
         currentUserName = name;
+        currentRole = captureRole();
         enterApp();
         toast(`Добро пожаловать, ${name}!`);
     } catch (e) { showAuthError(e.message); }
@@ -454,6 +469,7 @@ $('#login-btn').addEventListener('click', async () => {
     try {
         currentUserId = await loginById(id);
         currentUserName = getCookie('ewm_user_name') || null;
+        currentRole = captureRole();
         enterApp();
         toast(`С возвращением, ${currentUserName || 'пользователь #' + currentUserId}!`);
     } catch (e) { showAuthError(e.message); }

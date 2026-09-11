@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EWM — Админ-панель</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+    <h1 class="glitch" data-text="ADMIN PANEL">ADMIN PANEL</h1>
+    <div class="user-badge">
+        <a class="admin-link" href="/index.html">← Афиша</a>
+        <span id="admin-user-label"></span>
+        <button id="admin-logout" type="button">⎋ Выйти</button>
+    </div>
+</header>
+
+<main>
+    <section id="admin-denied" class="hidden">
+        <div class="cookie-box denied">
+            <h2> Доступ ограничен</h2>
+            <p>Эта страница доступна только роли «Администратор».</p>
+            <div class="cookie-actions">
+                <a href="/index.html"><button type="button">← Вернуться на афишу</button></a>
+            </div>
+        </div>
+    </section>
+
+    <section id="admin-panel" class="hidden">
+        <div class="section-head">
+            <h2>Мероприятия</h2>
+            <div class="admin-filters">
+                <button type="button" class="filter-btn active" data-states="">Все</button>
+                <button type="button" class="filter-btn" data-states="PENDING">PENDING</button>
+                <button type="button" class="filter-btn" data-states="PUBLISHED">PUBLISHED</button>
+                <button type="button" class="filter-btn" data-states="CANCELED">CANCELED</button>
+            </div>
+        </div>
+        <div id="admin-events" class="grid"></div>
+        <div class="pager">
+            <button id="admin-prev" type="button">‹ Назад</button>
+            <span id="admin-page">стр. 1</span>
+            <button id="admin-next" type="button">Вперёд ›</button>
+        </div>
+    </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+<script src="/js/admin.js"></script>
+</body>
+</html>

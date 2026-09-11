@@ -484,3 +484,87 @@ h2 {
 .state-pending   { color: #ffcc00; text-shadow: 0 0 8px rgba(255, 204, 0, .5); }
 .state-published { color: #00ff88; text-shadow: 0 0 8px rgba(0, 255, 136, .5); }
 .state-canceled  { color: #ff2244; text-shadow: 0 0 8px rgba(255, 34, 68, .5); }
+
+/* ── Выбор роли при входе ── */
+.role-row { display: flex; gap: 16px; margin: 0 0 14px; }
+.role-opt {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; letter-spacing: 1px; cursor: pointer;
+    border: 1px dashed var(--border-color, #00997a);
+    padding: 8px 12px;
+}
+/* ── Переключатель роли: терминальная галочка ── */
+.role-opt input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px; height: 18px; margin: 0;
+    border: 1px solid var(--border-color, #00997a);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+.role-opt input:checked {
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.role-opt input:checked::after {
+    content: "✔";
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-color, #00ffc8);
+    font-size: 13px; line-height: 1;
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.role-opt input:checked + span {
+    color: var(--text-color, #00ffc8);
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.role-opt:has(input:checked) {
+    border-color: var(--text-color, #00ffc8);
+    border-style: solid;
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+
+/* ── Админ-панель ── */
+.admin-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn {
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit; font-size: 12px;
+    padding: 6px 10px; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.filter-btn.active,
+.filter-btn:hover {
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.pager {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-top: 20px;
+}
+.pager button {
+    background: transparent;
+    border: 1px solid var(--text-color, #00ffc8);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit; font-size: 13px;
+    padding: 6px 14px; cursor: pointer;
+}
+.pager button:disabled { opacity: .3; cursor: default; box-shadow: none; }
+.pager button:not(:disabled):hover { background: var(--text-color, #00ffc8); color: var(--bg-color, #000604); }
+#admin-page { font-size: 13px; letter-spacing: 1px; }
+
+/* ── Ссылка на админ-панель ── */
+.admin-link {
+    color: var(--text-color, #00ffc8);
+    text-decoration: none;
+    font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+    border: 1px dashed var(--border-color, #00997a);
+    padding: 6px 12px;
+}
+.admin-link:hover {
+    border-color: var(--text-color, #00ffc8);
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
