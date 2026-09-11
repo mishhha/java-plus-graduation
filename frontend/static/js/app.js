@@ -5,6 +5,7 @@ const getId = (x) => x.id ?? x.eventId;
 let currentUserId = null;
 let currentUserName = null;
 const userId = () => currentUserId;
+let currentRole = 'user';
 
 const liked = new Set();       // сердечки, нажатые в этой сессии
 let eventsCache = new Map();   // id -> мероприятие
@@ -13,10 +14,15 @@ const CONSENT_KEY = 'ewm_cookie_consent';
 
 let currentEventId = null;
 let commentPage = 0;
+let commentsCache = new Map(); // id -> комментарий текущей страницы
 const COMMENT_SIZE = 5;
+
 
 /* ========== Фирменные терминальные глифы (для нового функционала) ========== */
 const GLYPH = {
+    yes:    '[Y]',  // согласие
+    no:     '[N]',  // отказ
+    menu:   '⋮',    // кебаб-меню действий
     view:   '◉',    // просмотр
     ok:     '✓',    // одобрить / записаться / опубликовать
     reject: '✕',    // отклонить / отменить
@@ -38,8 +44,6 @@ const GLYPH = {
     info:   '[i]',  // информация
     denied: '[!]',  // доступ запрещён
     wait:   '…',    // ожидание модерации
-    yes:    '[Y]',  // да
-    no:     '[N]',  // нет
     comm:   '//',   // комментарии (значок на карточке)
     edit:   '✎',    // редактировать
     del:    '✕',    // удалить (reuse существующего символа, но для контекста комментариев)
@@ -129,17 +133,17 @@ function card(e, score) {
     const rating = e.rating ?? 0;
     const isLiked = liked.has(id);
     const scoreLine = score != null
-        ? `<p class="score">🌟 Рекомендуем (${(score * 100).toFixed(0)}%)</p>`
+        ? `<p class="score">${GLYPH.rec} Рекомендуем (${(score * 100).toFixed(0)}%)</p>`
         : '';
     return `
 <div class="card">
     <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="likeEvent(${id})" title="Лайкнуть мероприятие">${isLiked ? '♥' : '♡'}</button>
     <h3>${title}</h3>
     <p class="annotation">${e.annotation || ''}</p>
-    <p>⭐ рейтинг: ${rating}</p>
+    <p>${GLYPH.rating} рейтинг: ${rating}</p>
     ${scoreLine}
     <div class="actions">
-        <button onclick="viewEvent(${id})">👁 Просмотр</button>
+        <button onclick="viewEvent(${id})">${GLYPH.view} Просмотр</button>
         <button onclick="registerEvent(${id})">${GLYPH.ok} Записаться</button>
         <button onclick="openEventComments(${id})">${GLYPH.comm}</button>
     </div>
@@ -181,31 +185,12 @@ async function openMyEvent(id) {
     if (isGuest()) { requireAuth(); return; }
     let e;
     try {
-        e = await api(`/users/${currentUserId}/events/${id}`); // владелец: state + confirmedRequests
+        e = await api(`/users/${currentUserId}/events/${id}`);
     } catch (err) {
-        try { e = await api(`/events/${id}`); }                // фолбэк: публичная карточка
+        try { e = await api(`/events/${id}`); }
         catch (e2) { toast(e2.message, true); return; }
     }
-    renderMyEventModal(e);
-}
-
-function renderMyEventModal(e) {
-    const limit = e.participantLimit ?? 0;
-    const confirmed = e.confirmedRequests ?? 0;
-    $('#modal-body').innerHTML = `
-        <h2>${e.title || ''}</h2>
-        <p class="modal-annotation">${e.annotation || ''}</p>
-        <div class="row"><span>Статус модерации</span><span class="state-${(e.state || '').toLowerCase()}">${STATE_LABEL[e.state] || e.state || '—'}</span></div>
-        <div class="row"><span>Участники</span><span class="mono">${progressBar(confirmed, limit)}</span></div>
-        <div class="row"><span>Подтверждено</span><span>${confirmed}</span></div>
-        <div class="row"><span>Лимит</span><span>${limit ? limit : 'без лимита'}</span></div>
-        <div class="row"><span>Категория</span><span>${e.category?.name || '—'}</span></div>
-        <div class="row"><span>Дата и время</span><span>${(e.eventDate || '').replace('T', ' ')}</span></div>
-        <div class="row"><span>Рейтинг</span><span>⭐ ${e.rating ?? 0}</span></div>
-        <h3>＞ Описание</h3>
-        <p class="modal-description">${e.description || ''}</p>
-    `;
-    $('#modal-overlay').classList.remove('hidden');
+    openModal(e, 'details');
 }
 
 function requestCard(r) {
@@ -217,7 +202,7 @@ function requestCard(r) {
     <p class="annotation">${ev.annotation || ''}</p>
     <p> Статус участия: ${r.status || '—'}</p>
     <div class="actions">
-        <button onclick="viewEvent(${id})">👁 Просмотр</button>
+        <button onclick="viewEvent(${id})">${GLYPH.view} Просмотр</button>
     </div>
 </div>`;
 }
@@ -320,10 +305,13 @@ function openModal(e, activeTab = 'details') {
 async function loadComments() {
     const container = $('#comments-container');
     if (!container || !currentEventId) return;
-
     const from = commentPage * COMMENT_SIZE;
     try {
         const comments = await api(`/events/${currentEventId}/comments?from=${from}&size=${COMMENT_SIZE}`);
+        if (!comments.length && commentPage > 0) {  // страница опустела после удаления
+            commentPage--;
+            return loadComments();
+        }
         renderComments(comments);
     } catch (e) {
         container.innerHTML = `<p>Ошибка загрузки: ${e.message}</p>`;
@@ -336,17 +324,28 @@ function renderComments(comments) {
         container.innerHTML = '<p>Комментариев пока нет</p>';
         return;
     }
-
-    const commentsHtml = comments.map(c => `
-        <div class="comment">
+    commentsCache = new Map(comments.map(c => [c.id, c]));
+    const commentsHtml = comments.map(c => {
+        const isMine = !isGuest() && c.authorId === currentUserId;
+        const canAct = isMine || currentRole === 'admin';
+        return `
+        <div class="comment" id="comment-${c.id}">
             <div class="comment-header">
-                <span>${GLYPH.user} ${c.authorName || 'Unknown'}</span>
-                <span>${GLYPH.date} ${formatDate(c.created)}</span>
+                <span>${GLYPH.user} ${escapeHtml(c.authorName || 'Unknown')}${isMine ? ' (вы)' : ''}</span>
+                <span class="comment-header-right">
+                    <span>${GLYPH.date} ${formatDate(c.created)}</span>
+                    ${canAct ? `<button type="button" class="comment-menu-btn" onclick="toggleCommentMenu(${c.id}, event)">${GLYPH.menu}</button>` : ''}
+                </span>
             </div>
             <div class="comment-text">${escapeHtml(c.text)}</div>
             ${c.edited ? `<div class="comment-edited">${GLYPH.edit} изменено ${formatDate(c.edited)}</div>` : ''}
-        </div>
-    `).join('');
+            ${canAct ? `
+            <div class="comment-menu hidden" id="comment-menu-${c.id}">
+                ${isMine ? `<button type="button" class="comment-menu-item" onclick="startEditComment(${c.id})">${GLYPH.edit} Редактировать</button>` : ''}
+                <button type="button" class="comment-menu-item danger" onclick="deleteComment(${c.id})">${GLYPH.del} Удалить</button>
+            </div>` : ''}
+        </div>`;
+    }).join('');
 
     const pagerHtml = `
         <div class="pager">
@@ -358,19 +357,81 @@ function renderComments(comments) {
 
     container.innerHTML = commentsHtml + pagerHtml;
 
-    // Слушатели пагинации
     $('#comments-prev').addEventListener('click', () => {
-        if (commentPage > 0) {
-            commentPage--;
-            loadComments();
-        }
+        if (commentPage > 0) { commentPage--; loadComments(); }
     });
     $('#comments-next').addEventListener('click', () => {
-        if (comments.length === COMMENT_SIZE) {
-            commentPage++;
-            loadComments();
-        }
+        if (comments.length === COMMENT_SIZE) { commentPage++; loadComments(); }
     });
+}
+
+function toggleCommentMenu(id, ev) {
+    if (ev) ev.stopPropagation();
+    const menu = document.getElementById(`comment-menu-${id}`);
+    const wasOpen = !menu.classList.contains('hidden');
+    closeAllCommentMenus();
+    if (!wasOpen) menu.classList.remove('hidden');
+}
+
+function closeAllCommentMenus() {
+    document.querySelectorAll('.comment-menu').forEach(m => m.classList.add('hidden'));
+}
+
+async function deleteComment(commentId) {
+    if (isGuest()) { requireAuth(); return; }
+    try {
+        if (currentRole === 'admin') {
+            await api(`/admin/comments/${commentId}`, { method: 'DELETE' });        // админ — любой
+        } else {
+            await api(`/users/${currentUserId}/comments/${commentId}`, { method: 'DELETE' }); // автор — свой
+        }
+        toast(`${GLYPH.del} Комментарий удалён`);
+        loadComments();
+    } catch (e) {
+        toast(e.message, true);
+    }
+}
+
+function startEditComment(commentId) {
+    closeAllCommentMenus();
+    const comment = commentsCache.get(commentId);
+    if (!comment) return;
+    const textEl = document.querySelector(`#comment-${commentId} .comment-text`);
+    if (!textEl || textEl.dataset.editing) return;
+    textEl.dataset.editing = '1';
+    textEl.innerHTML = `
+        <form class="comment-form" onsubmit="saveEditComment(event, ${commentId})">
+            <textarea id="edit-text-${commentId}" maxlength="2048" rows="3">${escapeHtml(comment.text)}</textarea>
+            <p id="edit-error-${commentId}" class="auth-error hidden"></p>
+            <div class="edit-actions">
+                <button type="submit" class="comment-submit">${GLYPH.ok} Сохранить</button>
+                <button type="button" class="comment-cancel" onclick="loadComments()">${GLYPH.no} Отмена</button>
+            </div>
+        </form>`;
+    document.getElementById(`edit-text-${commentId}`).focus();
+}
+
+async function saveEditComment(ev, commentId) {
+    ev.preventDefault();
+    const err = document.getElementById(`edit-error-${commentId}`);
+    err.classList.add('hidden');
+    const text = document.getElementById(`edit-text-${commentId}`).value.trim();
+    if (!text) {
+        err.textContent = 'Комментарий не может быть пустым';
+        err.classList.remove('hidden');
+        return;
+    }
+    try {
+        await api(`/users/${currentUserId}/comments/${commentId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ text }),
+        });
+        toast(`${GLYPH.edit} Комментарий обновлён`);
+        loadComments();
+    } catch (e) {
+        err.textContent = e.message;
+        err.classList.remove('hidden');
+    }
 }
 
 function renderCommentForm() {
@@ -440,7 +501,7 @@ async function viewEvent(id) {
     try {
         const event = await api(`/events/${id}`);
         openModal(event);
-        toast('Просмотр засчитан 👀');
+        toast(`${GLYPH.view} Просмотр засчитан`);
     } catch (e) { toast(e.message, true); }
 }
 
@@ -449,7 +510,7 @@ async function openEventComments(id) {
     try {
         const event = await api(`/events/${id}`);
         openModal(event, 'comments'); // сразу на вкладку комментариев
-        toast('Просмотр засчитан ◉');
+        toast(`${GLYPH.view} Просмотр засчитан`);
     } catch (e) { toast(e.message, true); }
 }
 
@@ -457,7 +518,7 @@ async function registerEvent(id) {
     if (isGuest()) { requireAuth(); return; }
     try {
         await api(`/users/${userId()}/requests?eventId=${id}`, { method: 'POST' });
-        toast('Заявка создана ✅');
+        toast(`${GLYPH.ok} Заявка создана`);
         refresh();
     } catch (e) { toast(e.message, true); }
 }
@@ -467,7 +528,7 @@ async function likeEvent(id) {
     try {
         await api(`/events/${id}/like`, { method: 'PUT' });
         liked.add(id);
-        toast('Лайк отправлен ❤️');
+        toast(`${GLYPH.like} Лайк отправлен`);
         refresh();
     } catch (e) { toast('Лайк не прошёл: ' + e.message, true); }
 }
@@ -502,7 +563,7 @@ async function submitCategory() {
             method: 'POST',
             body: JSON.stringify({ name }),
         });
-        toast('Категория создана ✅');
+        toast(`${GLYPH.ok} Категория создана`);
         await loadCategories();
         $('#ce-category').value = cat.id;   // сразу выбираем новую категорию
         cancelCategory();
@@ -604,7 +665,6 @@ async function boot() {
 }
 
 /* ========== Роль ========== */
-let currentRole = 'user';
 
 function captureRole() {
     const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
@@ -637,6 +697,11 @@ $('#cookie-retry').addEventListener('click', () => {
     localStorage.removeItem(CONSENT_KEY);
     $('#access-denied').classList.add('hidden');
     $('#cookie-overlay').classList.remove('hidden');
+});
+document.addEventListener('click', (ev) => {
+    if (!ev.target.closest('.comment-menu') && !ev.target.closest('.comment-menu-btn')) {
+        closeAllCommentMenus();
+    }
 });
 
 $('#auth-close').addEventListener('click', closeAuth);

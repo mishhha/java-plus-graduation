@@ -20,19 +20,9 @@
 </header>
 
 <main>
-    <section id="admin-denied" class="hidden">
-        <div class="cookie-box denied">
-            <h2> Доступ ограничен</h2>
-            <p>Эта страница доступна только роли «Администратор».</p>
-            <div class="cookie-actions">
-                <a href="/index.html"><button type="button">← Вернуться на афишу</button></a>
-            </div>
-        </div>
-    </section>
-
-    <section id="admin-panel" class="hidden">
+    <section id="section-admin">
         <div class="section-head">
-            <h2>Мероприятия</h2>
+            <h2>▦ Мероприятия</h2>
             <div class="admin-filters">
                 <button type="button" class="filter-btn active" data-states="">Все</button>
                 <button type="button" class="filter-btn" data-states="PENDING">PENDING</button>
@@ -48,6 +38,18 @@
         </div>
     </section>
 </main>
+
+<div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-tabs">
+            <button type="button" class="tab active" data-tab="details">◈ Детали</button>
+            <button type="button" class="tab" data-tab="comments">// Комментарии</button>
+        </div>
+        <div id="tab-details" class="tab-content"></div>
+        <div id="tab-comments" class="tab-content hidden"></div>
+    </div>
+</div>
 
 <div id="toast" class="toast hidden"></div>
 <script src="/js/admin.js"></script>

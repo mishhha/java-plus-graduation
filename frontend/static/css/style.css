@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
     --bg-color: #000604;      /* почти чёрный, без синевы */
@@ -11,7 +11,8 @@
 * { box-sizing: border-box; }
 
 body {
-    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 16px;  /* стандартный размер */
     margin: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -509,7 +510,7 @@ h2 {
     box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
 }
 .role-opt input:checked::after {
-    content: "✔";
+    content: "✓";
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     color: var(--text-color, #00ffc8);
@@ -708,4 +709,131 @@ h2 {
     cursor: pointer;
     text-decoration: underline;
     text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+
+/* ── Удаление комментария ── */
+.comment-actions { margin-top: 8px; text-align: right; }
+.comment-del {
+    background: transparent;
+    border: 1px solid #ff2244;
+    color: #ff2244;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.comment-del:hover {
+    background: #ff2244;
+    color: var(--bg-color, #000604);
+    text-shadow: none;
+    box-shadow: 0 0 8px rgba(255, 34, 68, .55);
+}
+
+/* ── Кебаб-меню комментария ── */
+.comment { position: relative; }
+.comment-header-right { display: flex; align-items: center; gap: 8px; }
+.comment-menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--border-color, #00997a);
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+.comment-menu-btn:hover {
+    color: var(--text-color, #00ffc8);
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.comment-menu {
+    position: absolute;
+    top: 34px;
+    right: 10px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    min-width: 170px;
+    background: var(--bg-color, #000604);
+    border: 1px solid var(--text-color, #00ffc8);
+    box-shadow: 0 0 12px rgba(0, 255, 200, .35);
+}
+.comment-menu-item {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--border-color, #00997a);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 12px;
+    text-align: left;
+    padding: 8px 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.comment-menu-item:last-child { border-bottom: none; }
+.comment-menu-item:hover { background: rgba(0, 255, 200, .12); }
+.comment-menu-item.danger { color: #ff2244; }
+.comment-menu-item.danger:hover { background: rgba(255, 34, 68, .15); }
+
+/* ── Инлайн-редактирование комментария ── */
+.edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+.comment-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color, #00997a);
+    color: var(--border-color, #00997a);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.comment-cancel:hover {
+    border-color: var(--text-color, #00ffc8);
+    color: var(--text-color, #00ffc8);
+}
+
+/* ── Единый терминальный стандарт кнопок (формы комментариев + пагинация) ── */
+.comment-submit,
+.comment-cancel,
+.pager button {
+    background: transparent;
+    border: 1px solid var(--text-color, #00ffc8);
+    color: var(--text-color, #00ffc8);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    padding: 9px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all .2s;
+}
+.comment-submit:hover,
+.comment-cancel:hover,
+.pager button:not(:disabled):hover {
+    background: var(--text-color, #00ffc8);
+    color: var(--bg-color, #000604);
+    text-shadow: none;
+    box-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.pager button:disabled {
+    opacity: .3;
+    cursor: default;
+    box-shadow: none;
+}
+.edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* ── Добивка унификации: сброс отступов, чтобы кнопки стояли в одну линию ── */
+.comment-submit,
+.comment-cancel,
+.pager button {
+    margin: 0;
+}
+/* отступ сверху только у кнопки отправки в основной форме (прямой ребёнок form) */
+.comment-form > .comment-submit {
+    margin-top: 8px;
 }
