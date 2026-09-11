@@ -163,3 +163,45 @@ h2 {
 .modal-description { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
 
 .hidden { display: none !important; }
+
+/* ── Сердечко-лайк в углу карточки ── */
+.card { position: relative; }
+.card h3 { padding-right: 40px; }   /* чтобы заголовок не наезжал на значок */
+
+/* ── Сердечко-лайк в углу карточки ── */
+.like-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: transparent;
+    border: none;                 /* убираем рамку совсем */
+    outline: none;                /* убираем outline браузера */
+    -webkit-tap-highlight-color: transparent; /* убираем подсветку тапа */
+    color: var(--border-color, #00997a);
+    font-family: inherit;
+    font-size: 20px;
+    line-height: 1;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: color .15s, text-shadow .15s;
+}
+.like-btn:hover {
+    color: var(--text-color, #00ffc8);
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+}
+.like-btn:focus,
+.like-btn:focus-visible,
+.like-btn:active {
+    outline: none;                /* гарантия: после клика рамки нет */
+    border: none;
+}
+.like-btn.liked {
+    color: var(--text-color, #00ffc8);
+    text-shadow: var(--glow, 0 0 8px rgba(0, 255, 200, .55));
+    animation: like-pulse .3s ease;
+}
+@keyframes like-pulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}

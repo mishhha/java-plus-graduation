@@ -1,6 +1,7 @@
 const $ = (s) => document.querySelector(s);
 const userId = () => $('#user-id').value;
 const getId = (x) => x.id ?? x.eventId;
+const liked = new Set(); // id мероприятий, лайкнутых в этой сессии
 
 let eventsCache = new Map(); // id -> мероприятие (для обогащения рекомендаций)
 
@@ -33,19 +34,20 @@ function card(e, score) {
     const id = getId(e);
     const title = e.title || e.name || `Мероприятие #${id}`;
     const rating = e.rating ?? 0;
+    const isLiked = liked.has(id);
     const scoreLine = score != null
-        ? `<p class="score"> Рекомендуем (${(score * 100).toFixed(0)}%)</p>`
+        ? `<p class="score">🌟 Рекомендуем (${(score * 100).toFixed(0)}%)</p>`
         : '';
     return `
 <div class="card">
+    <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="likeEvent(${id})" title="Лайкнуть мероприятие">${isLiked ? '♥' : '♡'}</button>
     <h3>${title}</h3>
     <p class="annotation">${e.annotation || ''}</p>
-    <p> рейтинг: ${rating}</p>
+    <p>⭐ рейтинг: ${rating}</p>
     ${scoreLine}
     <div class="actions">
         <button onclick="viewEvent(${id})">👁 Просмотр</button>
         <button onclick="registerEvent(${id})">✅ Записаться</button>
-        <button onclick="likeEvent(${id})">❤️ Лайк</button>
     </div>
 </div>`;
 }
@@ -98,8 +100,12 @@ async function registerEvent(id) {
 }
 
 async function likeEvent(id) {
-    try { await api(`/events/${id}/like`, { method: 'PUT' }); toast('Лайк отправлен ❤️'); refresh(); }
-    catch (e) { toast('Лайк не прошёл: ' + e.message, true); }
+    try {
+        await api(`/events/${id}/like`, { method: 'PUT' });
+        liked.add(id);
+        toast('Лайк отправлен ♥');
+        refresh();
+    } catch (e) { toast('Лайк не прошёл: ' + e.message, true); }
 }
 
 function openModal(e) {
