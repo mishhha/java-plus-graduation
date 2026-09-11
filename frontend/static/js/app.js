@@ -11,6 +11,10 @@ let eventsCache = new Map();   // id -> мероприятие
 
 const CONSENT_KEY = 'ewm_cookie_consent';
 
+let currentEventId = null;
+let commentPage = 0;
+const COMMENT_SIZE = 5;
+
 /* ========== Фирменные терминальные глифы (для нового функционала) ========== */
 const GLYPH = {
     view:   '◉',    // просмотр
@@ -276,6 +280,7 @@ async function refresh() {
 
 /* ========== Модалка карточки мероприятия ========== */
 function openModal(e, activeTab = 'details') {
+    currentEventId = getId(e);
     const date = (e.eventDate || '').replace('T', ' ');
 
     // Вкладка "Детали"
@@ -293,8 +298,8 @@ function openModal(e, activeTab = 'details') {
         <p class="modal-description">${e.description || ''}</p>
     `;
 
-    // Вкладка "Комментарии" (пока заглушка, реализуем на Шаге 3)
-    $('#tab-comments').innerHTML = '<p>Комментариев пока нет</p>';
+    // Вкладка "Комментарии": форма сверху, лента ниже
+    $('#tab-comments').innerHTML = '<div id="comment-form-box"></div><div id="comments-container"></div>';
 
     // Активируем нужную вкладку
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -303,6 +308,125 @@ function openModal(e, activeTab = 'details') {
     $('#tab-comments').classList.toggle('hidden', activeTab !== 'comments');
 
     $('#modal-overlay').classList.remove('hidden');
+
+    // Если открыта вкладка комментариев — загружаем их
+    if (activeTab === 'comments') {
+        commentPage = 0;
+        renderCommentForm();
+        loadComments();
+    }
+}
+
+async function loadComments() {
+    const container = $('#comments-container');
+    if (!container || !currentEventId) return;
+
+    const from = commentPage * COMMENT_SIZE;
+    try {
+        const comments = await api(`/events/${currentEventId}/comments?from=${from}&size=${COMMENT_SIZE}`);
+        renderComments(comments);
+    } catch (e) {
+        container.innerHTML = `<p>Ошибка загрузки: ${e.message}</p>`;
+    }
+}
+
+function renderComments(comments) {
+    const container = $('#comments-container');
+    if (!comments.length) {
+        container.innerHTML = '<p>Комментариев пока нет</p>';
+        return;
+    }
+
+    const commentsHtml = comments.map(c => `
+        <div class="comment">
+            <div class="comment-header">
+                <span>${GLYPH.user} ${c.authorName || 'Unknown'}</span>
+                <span>${GLYPH.date} ${formatDate(c.created)}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(c.text)}</div>
+            ${c.edited ? `<div class="comment-edited">${GLYPH.edit} изменено ${formatDate(c.edited)}</div>` : ''}
+        </div>
+    `).join('');
+
+    const pagerHtml = `
+        <div class="pager">
+            <button id="comments-prev" type="button" ${commentPage === 0 ? 'disabled' : ''}>‹ Назад</button>
+            <span>стр. ${commentPage + 1}</span>
+            <button id="comments-next" type="button" ${comments.length < COMMENT_SIZE ? 'disabled' : ''}>Вперёд ›</button>
+        </div>
+    `;
+
+    container.innerHTML = commentsHtml + pagerHtml;
+
+    // Слушатели пагинации
+    $('#comments-prev').addEventListener('click', () => {
+        if (commentPage > 0) {
+            commentPage--;
+            loadComments();
+        }
+    });
+    $('#comments-next').addEventListener('click', () => {
+        if (comments.length === COMMENT_SIZE) {
+            commentPage++;
+            loadComments();
+        }
+    });
+}
+
+function renderCommentForm() {
+    const box = $('#comment-form-box');
+    if (!box) return;
+    if (isGuest()) {
+        box.innerHTML = `
+            <p class="comment-login-hint">${GLYPH.user}
+                <button type="button" class="link-btn" onclick="requireAuth()">Войдите</button>,
+                чтобы оставить комментарий
+            </p>`;
+        return;
+    }
+    box.innerHTML = `
+        <form id="comment-form" class="comment-form">
+            <textarea id="comment-text" maxlength="2048" rows="3" placeholder="Ваш комментарий..."></textarea>
+            <p id="comment-error" class="auth-error hidden"></p>
+            <button type="submit" class="comment-submit">${GLYPH.edit} Отправить</button>
+        </form>`;
+    $('#comment-form').addEventListener('submit', submitComment);
+}
+
+async function submitComment(ev) {
+    ev.preventDefault();
+    const err = $('#comment-error');
+    err.classList.add('hidden');
+    const text = $('#comment-text').value.trim();
+    if (!text) {
+        err.textContent = 'Комментарий не может быть пустым';
+        err.classList.remove('hidden');
+        return;
+    }
+    try {
+        await api(`/users/${currentUserId}/events/${currentEventId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ text }),
+        });
+        toast(`${GLYPH.edit} Комментарий оставлен`);
+        $('#comment-text').value = '';
+        commentPage = 0;          // новые сверху — уходим на первую страницу
+        loadComments();
+    } catch (e) {
+        err.textContent = e.message;   // например: «Нельзя комментировать неопубликованное событие»
+        err.classList.remove('hidden');
+    }
+}
+
+function formatDate(isoString) {
+    if (!isoString) return '—';
+    return isoString.replace('T', ' ').substring(0, 16); // "2025-01-15 14:30"
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function closeModal() {
