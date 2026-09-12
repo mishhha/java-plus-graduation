@@ -17,4 +17,6 @@ public class RequestCountController {
     public Map<Long, Long> getConfirmedCounts(@RequestParam("eventIds") List<Long> eventIds) {
         return requestService.getConfirmedRequestsCounts(eventIds);
     }
+
+
 }
