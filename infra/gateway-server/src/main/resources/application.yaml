@@ -2,19 +2,9 @@ spring:
   application:
     name: gateway-server
   config:
-    import: "optional:configserver:http://localhost:8888"
-  cloud:
-    config:
-      discovery:
-        enabled: true
-        service-id: config-server
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery-server:8761/eureka/
-  instance:
-    prefer-ip-address: true
+    import:
+      - "optional:configserver:http://localhost:8888"
+      - "optional:configserver:http://config-server:8888"
 
 management:
   endpoints:

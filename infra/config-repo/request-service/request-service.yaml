@@ -12,3 +12,10 @@ spring:
   sql:
     init:
       mode: always
+
+grpc:
+  client:
+    collector-service:
+      address: 'discovery:///collector-service'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
